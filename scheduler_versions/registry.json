@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "versions": [
+    {
+      "name": "v0-baseline",
+      "source": "scheduler_versions/v0_baseline.cpp",
+      "description": "Frozen FIFO singleton baseline before scoring optimizations.",
+      "frozen": true
+    },
+    {
+      "name": "working-tree",
+      "source": "main.cpp",
+      "description": "Current editable scheduler implementation.",
+      "frozen": false
+    }
+  ]
+}

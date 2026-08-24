@@ -80,6 +80,19 @@ make notebook-check
 The `uv` commands in those targets use isolated notebook tooling; the scheduler itself keeps
 its existing GNU++17 and Python-standard-library requirements.
 
+`notebooks/scheduler_benchmark_workbench.ipynb` is the companion version-comparison notebook.
+It rebuilds every entry in `scheduler_versions/registry.json`, runs the same dynamic scenarios,
+validates the metrics, and shows suite summaries, per-scenario scores, deltas, and regression
+alerts. Generate or execute it with:
+
+```bash
+make benchmark-notebook
+make benchmark-notebook-check
+```
+
+Preserve the current `main.cpp` as a named iteration with `tools/register_scheduler.py`; the
+script refuses to overwrite an existing version.
+
 The transcript harness currently checks:
 
 - the official one-request worked example; and

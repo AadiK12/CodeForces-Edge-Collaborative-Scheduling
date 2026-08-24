@@ -3,8 +3,11 @@ CXXFLAGS ?= -std=c++17 -O2 -pipe -Wall -Wextra -Wpedantic
 TARGET := build/baseline
 NOTEBOOK_SOURCE := notebooks/edge_cloud_scheduling_lab.py
 NOTEBOOK := notebooks/edge_cloud_scheduling_lab.ipynb
+BENCHMARK_NOTEBOOK_SOURCE := notebooks/scheduler_benchmark_workbench.py
+BENCHMARK_NOTEBOOK := notebooks/scheduler_benchmark_workbench.ipynb
 
-.PHONY: all test transcript-test scenario-test benchmark sanitize notebook notebook-check clean
+.PHONY: all test transcript-test scenario-test benchmark sanitize notebook notebook-check \
+	benchmark-notebook benchmark-notebook-check clean
 
 all: $(TARGET)
 
@@ -34,6 +37,17 @@ $(NOTEBOOK): $(NOTEBOOK_SOURCE)
 notebook-check: notebook $(TARGET)
 	uv run --with nbconvert --with nbclient --with ipykernel --with nbformat \
 		jupyter nbconvert --execute --to notebook --inplace $(NOTEBOOK) \
+		--ExecutePreprocessor.timeout=180
+
+benchmark-notebook: $(BENCHMARK_NOTEBOOK)
+
+$(BENCHMARK_NOTEBOOK): $(BENCHMARK_NOTEBOOK_SOURCE)
+	uv run --with jupytext --with nbformat \
+		jupytext --to ipynb --output $(BENCHMARK_NOTEBOOK) $(BENCHMARK_NOTEBOOK_SOURCE)
+
+benchmark-notebook-check: benchmark-notebook
+	uv run --with nbconvert --with nbclient --with ipykernel --with nbformat \
+		jupyter nbconvert --execute --to notebook --inplace $(BENCHMARK_NOTEBOOK) \
 		--ExecutePreprocessor.timeout=180
 
 sanitize:
