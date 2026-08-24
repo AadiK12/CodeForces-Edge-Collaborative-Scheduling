@@ -1,0 +1,25 @@
+{
+  "name": "batch_friendly_burst",
+  "description": "A high-overhead request burst where decode grouping should materially improve throughput.",
+  "system": {"K": 4, "S": 8.0, "latency_in_ms": 0.2, "bandwidth_gbps": 100.0, "bytes_per_token": 512, "num_layers": 8},
+  "scoring": {"SLO1": 600.0, "SLO2": 100.0, "tp_UB": 0.35, "tp_base": 0.01, "dist_base": 5.0, "w_tp": 0.9, "w_c": 0.1},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8},
+    {"arrival": 0.0, "input_length": 16, "output_length": 8}
+  ]
+}

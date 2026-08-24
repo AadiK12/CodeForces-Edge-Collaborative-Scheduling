@@ -1,0 +1,82 @@
+[
+  {
+    "scenario": "official_worked_example",
+    "score": 500.00000275862067,
+    "throughput": 0.022222222222222223,
+    "tdr": 30.0,
+    "tpot": 0.0,
+    "elapsed": 45.0
+  },
+  {
+    "scenario": "single_sanity",
+    "score": 754.1114885279881,
+    "throughput": 0.08115121678783663,
+    "tdr": 10.263107199999999,
+    "tpot": 8.9016384,
+    "elapsed": 36.968022399999995
+  },
+  {
+    "scenario": "two_cloud_parallel",
+    "score": 776.9386580128887,
+    "throughput": 0.12722438768463998,
+    "tdr": 90.03529440000004,
+    "tpot": 10.949768765217389,
+    "elapsed": 227.94371839999997
+  },
+  {
+    "scenario": "output_length_skew",
+    "score": 724.1369160551818,
+    "throughput": 0.1280456386850606,
+    "tdr": 96.37163200000005,
+    "tpot": 10.538389759999998,
+    "elapsed": 437.34406399999983
+  },
+  {
+    "scenario": "batch_friendly_burst",
+    "score": 200.43253364659435,
+    "throughput": 0.05259697567389861,
+    "tdr": 969.7250000000009,
+    "tpot": 68.6625000000002,
+    "elapsed": 2433.6000000000067
+  },
+  {
+    "scenario": "latency_sensitive_stream",
+    "score": 591.9849530704229,
+    "throughput": 0.15849028929574857,
+    "tdr": 106.84655306666674,
+    "tpot": 14.694159599999987,
+    "elapsed": 378.5720895999997
+  },
+  {
+    "scenario": "link_bottleneck",
+    "score": 243.11860991153543,
+    "throughput": 0.0011846016591826988,
+    "tdr": 14669.7,
+    "tpot": 227.16666666666666,
+    "elapsed": 27013.300000000003
+  },
+  {
+    "scenario": "prefill_preemption",
+    "score": 704.4281236270591,
+    "throughput": 0.09765082691428233,
+    "tdr": 362.95667327999917,
+    "tpot": 8.906553599999965,
+    "elapsed": 655.3963957333311
+  },
+  {
+    "scenario": "degenerate_one_layer",
+    "score": 766.3707331191928,
+    "throughput": 0.08458380527337397,
+    "tdr": 25.96988693333333,
+    "tpot": 7.900819199999994,
+    "elapsed": 70.93556479999998
+  },
+  {
+    "scenario": "interpolation_missing_values",
+    "score": 761.0468086287802,
+    "throughput": 0.10919778727893652,
+    "tdr": 42.2887772,
+    "tpot": 8.908940533333334,
+    "elapsed": 91.57694719999999
+  }
+]

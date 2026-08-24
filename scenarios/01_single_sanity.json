@@ -1,0 +1,10 @@
+{
+  "name": "single_sanity",
+  "description": "One request on one cloud; verifies the complete prefill/decode lifecycle.",
+  "system": {"K": 1, "S": 1.0, "latency_in_ms": 1.0, "bandwidth_gbps": 10.0, "bytes_per_token": 1024, "num_layers": 4},
+  "scoring": {"SLO1": 20.0, "SLO2": 15.0, "tp_UB": 0.15, "tp_base": 0.01, "dist_base": 2.0, "w_tp": 0.5, "w_c": 0.5},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 8, "output_length": 3}
+  ]
+}

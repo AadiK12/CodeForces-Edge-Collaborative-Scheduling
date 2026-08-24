@@ -1,0 +1,12 @@
+{
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 0.30, "prefill_proc": 2.00, "prefill_post": 0.30, "decode_pre": 0.50, "decode_proc": 3.00, "decode_post": 0.40},
+    {"batch_size": 4, "prefill_pre": 0.35, "prefill_proc": 3.00, "prefill_post": 0.32, "decode_pre": 0.90, "decode_proc": 7.00, "decode_post": 0.70},
+    {"batch_size": 8, "prefill_pre": 0.40, "prefill_proc": 4.50, "prefill_post": 0.35, "decode_pre": 1.30, "decode_proc": 11.00, "decode_post": 1.00},
+    {"batch_size": 16, "prefill_pre": 0.50, "prefill_proc": 7.00, "prefill_post": 0.40, "decode_pre": 2.00, "decode_proc": 18.00, "decode_post": 1.50},
+    {"batch_size": 32, "prefill_pre": 0.70, "prefill_proc": 12.00, "prefill_post": 0.50, "decode_pre": 3.20, "decode_proc": 30.00, "decode_post": 2.40},
+    {"batch_size": 64, "prefill_pre": 1.00, "prefill_proc": 22.00, "prefill_post": 0.70, "decode_pre": 5.50, "decode_proc": 52.00, "decode_post": 4.00},
+    {"batch_size": 256, "prefill_pre": 2.50, "prefill_proc": 80.00, "prefill_post": 1.50, "decode_pre": 18.00, "decode_proc": 180.00, "decode_post": 14.00},
+    {"batch_size": 4096, "prefill_pre": 20.00, "prefill_proc": 1200.00, "prefill_post": 10.00, "decode_pre": 200.00, "decode_proc": 2000.00, "decode_post": 150.00}
+  ]
+}

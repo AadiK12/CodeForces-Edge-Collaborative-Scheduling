@@ -1,0 +1,12 @@
+{
+  "name": "degenerate_one_layer",
+  "description": "K=1 and num_layers=1 exercise both mechanics at their minimum legal values.",
+  "system": {"K": 1, "S": 1.0, "latency_in_ms": 0.5, "bandwidth_gbps": 20.0, "bytes_per_token": 1024, "num_layers": 1},
+  "scoring": {"SLO1": 50.0, "SLO2": 15.0, "tp_UB": 0.15, "tp_base": 0.01, "dist_base": 3.0, "w_tp": 0.5, "w_c": 0.5},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 1, "output_length": 1},
+    {"arrival": 2.0, "input_length": 4, "output_length": 3},
+    {"arrival": 4.0, "input_length": 8, "output_length": 2}
+  ]
+}

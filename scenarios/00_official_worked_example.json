@@ -1,0 +1,13 @@
+{
+  "name": "official_worked_example",
+  "description": "Calibration case reproducing the official one-request, 45 ms transcript.",
+  "system": {"K": 1, "S": 1.0, "latency_in_ms": 2.0, "bandwidth_gbps": 1.0, "bytes_per_token": 125000, "num_layers": 4},
+  "scoring": {"SLO1": 30.0, "SLO2": 15.0, "tp_UB": 0.0625, "tp_base": 0.022222222, "dist_base": 0.0, "w_tp": 0.5, "w_c": 0.5},
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 3.0, "prefill_proc": 10.0, "prefill_post": 2.0, "decode_pre": 1.0, "decode_proc": 4.0, "decode_post": 1.0},
+    {"batch_size": 4, "prefill_pre": 3.0, "prefill_proc": 10.0, "prefill_post": 2.0, "decode_pre": 1.0, "decode_proc": 4.0, "decode_post": 1.0}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 4, "output_length": 1}
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "name": "interpolation_missing_values",
+  "description": "Unsorted rows, missing task entries, and unlisted input/group sizes test duration-curve handling.",
+  "system": {"K": 2, "S": 1.0, "latency_in_ms": 1.0, "bandwidth_gbps": 5.0, "bytes_per_token": 2048, "num_layers": 3},
+  "scoring": {"SLO1": 80.0, "SLO2": 20.0, "tp_UB": 0.20, "tp_base": 0.01, "dist_base": 3.0, "w_tp": 0.5, "w_c": 0.5},
+  "task_times": [
+    {"batch_size": 8, "prefill_pre": 1.20, "prefill_proc": 12.00, "prefill_post": 0.80, "decode_pre": 2.00, "decode_proc": 8.00, "decode_post": 1.50},
+    {"batch_size": 1, "prefill_pre": 0.40, "prefill_proc": 2.00, "prefill_post": 0.30, "decode_pre": 0.50, "decode_proc": 3.00, "decode_post": 0.40},
+    {"batch_size": 4, "prefill_pre": 0.80, "prefill_proc": 7.00, "prefill_post": 0.50, "decode_pre": -1.00, "decode_proc": 6.00, "decode_post": 0.90},
+    {"batch_size": 16, "prefill_pre": 2.00, "prefill_proc": 20.00, "prefill_post": 1.20, "decode_pre": 3.00, "decode_proc": 12.00, "decode_post": -1.00}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 6, "output_length": 3},
+    {"arrival": 0.0, "input_length": 10, "output_length": 3},
+    {"arrival": 1.0, "input_length": 5, "output_length": 2},
+    {"arrival": 2.0, "input_length": 12, "output_length": 2}
+  ]
+}

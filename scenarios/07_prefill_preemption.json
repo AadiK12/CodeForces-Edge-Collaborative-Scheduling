@@ -1,0 +1,14 @@
+{
+  "name": "prefill_preemption",
+  "description": "Long and short prefills overlap with active decode streams, creating a future use case for layer chunking.",
+  "system": {"K": 2, "S": 1.0, "latency_in_ms": 1.0, "bandwidth_gbps": 10.0, "bytes_per_token": 4096, "num_layers": 64},
+  "scoring": {"SLO1": 300.0, "SLO2": 20.0, "tp_UB": 0.20, "tp_base": 0.01, "dist_base": 4.0, "w_tp": 0.5, "w_c": 0.5},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 2048, "output_length": 2},
+    {"arrival": 0.0, "input_length": 16, "output_length": 20},
+    {"arrival": 5.0, "input_length": 16, "output_length": 20},
+    {"arrival": 10.0, "input_length": 32, "output_length": 12},
+    {"arrival": 15.0, "input_length": 8, "output_length": 10}
+  ]
+}

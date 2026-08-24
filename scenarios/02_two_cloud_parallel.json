@@ -1,0 +1,15 @@
+{
+  "name": "two_cloud_parallel",
+  "description": "A six-request burst that exposes cloud reservation and edge serialization.",
+  "system": {"K": 2, "S": 1.0, "latency_in_ms": 2.0, "bandwidth_gbps": 5.0, "bytes_per_token": 4096, "num_layers": 8},
+  "scoring": {"SLO1": 80.0, "SLO2": 25.0, "tp_UB": 0.20, "tp_base": 0.02, "dist_base": 3.0, "w_tp": 0.5, "w_c": 0.5},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 16, "output_length": 6},
+    {"arrival": 0.0, "input_length": 32, "output_length": 4},
+    {"arrival": 0.0, "input_length": 8, "output_length": 5},
+    {"arrival": 0.0, "input_length": 64, "output_length": 3},
+    {"arrival": 0.0, "input_length": 16, "output_length": 7},
+    {"arrival": 0.0, "input_length": 8, "output_length": 4}
+  ]
+}

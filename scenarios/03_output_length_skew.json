@@ -1,0 +1,15 @@
+{
+  "name": "output_length_skew",
+  "description": "Two early requests have very different hidden output lengths; later requests queue behind their cloud reservations.",
+  "system": {"K": 2, "S": 1.5, "latency_in_ms": 1.0, "bandwidth_gbps": 8.0, "bytes_per_token": 2048, "num_layers": 8},
+  "scoring": {"SLO1": 120.0, "SLO2": 20.0, "tp_UB": 0.22, "tp_base": 0.02, "dist_base": 4.0, "w_tp": 0.6, "w_c": 0.4},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 16, "output_length": 40},
+    {"arrival": 0.0, "input_length": 16, "output_length": 2},
+    {"arrival": 1.0, "input_length": 16, "output_length": 4},
+    {"arrival": 2.0, "input_length": 16, "output_length": 3},
+    {"arrival": 3.0, "input_length": 16, "output_length": 5},
+    {"arrival": 4.0, "input_length": 16, "output_length": 2}
+  ]
+}

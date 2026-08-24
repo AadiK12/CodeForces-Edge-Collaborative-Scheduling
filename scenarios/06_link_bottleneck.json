@@ -1,0 +1,17 @@
+{
+  "name": "link_bottleneck",
+  "description": "Four clouds share a very slow, high-latency link; transfer consolidation and queue awareness dominate.",
+  "system": {"K": 4, "S": 1.0, "latency_in_ms": 20.0, "bandwidth_gbps": 0.05, "bytes_per_token": 100000, "num_layers": 16},
+  "scoring": {"SLO1": 5000.0, "SLO2": 150.0, "tp_UB": 0.01, "tp_base": 0.0005, "dist_base": 4.0, "w_tp": 0.6, "w_c": 0.4},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 64, "output_length": 4},
+    {"arrival": 0.0, "input_length": 128, "output_length": 4},
+    {"arrival": 0.0, "input_length": 256, "output_length": 4},
+    {"arrival": 0.0, "input_length": 64, "output_length": 4},
+    {"arrival": 5.0, "input_length": 128, "output_length": 4},
+    {"arrival": 5.0, "input_length": 64, "output_length": 4},
+    {"arrival": 5.0, "input_length": 256, "output_length": 4},
+    {"arrival": 5.0, "input_length": 128, "output_length": 4}
+  ]
+}
