@@ -1,0 +1,13 @@
+{
+  "name": "slo_priority_collision",
+  "description": "One active decode stream collides with later medium prefills on a single cloud; a latency-heavy score should reward overdue decode progress.",
+  "system": {"K": 1, "S": 1.0, "latency_in_ms": 0.2, "bandwidth_gbps": 100.0, "bytes_per_token": 512, "num_layers": 8},
+  "scoring": {"SLO1": 300.0, "SLO2": 10.0, "tp_UB": 0.18, "tp_base": 0.01, "dist_base": 8.0, "w_tp": 0.05, "w_c": 0.95},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 8, "output_length": 20},
+    {"arrival": 12.0, "input_length": 256, "output_length": 2},
+    {"arrival": 14.0, "input_length": 256, "output_length": 2},
+    {"arrival": 16.0, "input_length": 16, "output_length": 6}
+  ]
+}

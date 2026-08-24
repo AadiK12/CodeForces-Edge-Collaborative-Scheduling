@@ -6,7 +6,7 @@
 # It keeps four activities in one place:
 #
 # 1. understand the system and interactive protocol;
-# 2. connect those concepts to the real `main.cpp` baseline;
+# 2. connect those concepts to both the frozen baseline and the current layered scheduler;
 # 3. run the policy against deterministic scenarios; and
 # 4. add optimizations one at a time and measure what actually improves.
 #
@@ -22,7 +22,7 @@
 # - What work runs on the edge, in a cloud, and on the shared links?
 # - What does one request do from `ARR` to `FIN`?
 # - What does an assignment such as `E D PRE -1 3 7 12 19` mean?
-# - Why is the current policy correct but intentionally inefficient?
+# - Why is the frozen baseline correct but intentionally inefficient?
 # - When does decode grouping help, and when can waiting for a group hurt?
 # - Which scenario should expose each optimization?
 # - Did a code change remain legal, and did it improve score, throughput, TDR, or TPOT?
@@ -59,12 +59,15 @@ def find_repo_root(start: Path | None = None) -> Path:
 
 REPO_ROOT = find_repo_root()
 BUILD_DIR = REPO_ROOT / "build"
-SOLVER = BUILD_DIR / "baseline"
+BASELINE_SOLVER = BUILD_DIR / "v0-baseline"
+WORKING_SOLVER = BUILD_DIR / "scheduler"
 SCENARIO_DIR = REPO_ROOT / "scenarios"
 BASELINE_SNAPSHOT = REPO_ROOT / "benchmarks/baseline-v0.json"
+REGISTRY_PATH = REPO_ROOT / "scheduler_versions/registry.json"
 
 print(f"Repository: {REPO_ROOT}")
-print(f"Solver:     {SOLVER}")
+print(f"Frozen v0:  {BASELINE_SOLVER}")
+print(f"Current v7: {WORKING_SOLVER}")
 
 # %%
 def run_checked(command: list[str], timeout_seconds: float = 120.0) -> subprocess.CompletedProcess[str]:
@@ -85,8 +88,9 @@ def run_checked(command: list[str], timeout_seconds: float = 120.0) -> subproces
     return completed
 
 
-run_checked(["make"])
-assert SOLVER.is_file(), "The baseline executable was not created"
+run_checked(["make", "build/v0-baseline", "build/scheduler"])
+assert BASELINE_SOLVER.is_file(), "The frozen baseline executable was not created"
+assert WORKING_SOLVER.is_file(), "The current scheduler executable was not created"
 
 # %%
 def display_table(rows: Iterable[dict[str, Any]], columns: list[tuple[str, str]] | None = None) -> None:
@@ -194,6 +198,10 @@ pressure_by_name = {
     "prefill_preemption": "prefill layer chunking",
     "degenerate_one_layer": "minimum legal mechanics",
     "interpolation_missing_values": "task-time interpolation",
+    "single_cloud_prefill_interleave": "adaptive prefill chunking",
+    "slo_priority_collision": "SLO-aware urgency",
+    "latency_weighted_slow_link": "latency-weighted link policy",
+    "nonmonotonic_batch_table": "table-aware group size",
 }
 
 scenario_summary = []
@@ -209,7 +217,7 @@ for path in scenario_paths:
             "tokens": sum(request["output_length"] for request in requests),
             "w_tp": data["scoring"]["w_tp"],
             "w_c": data["scoring"]["w_c"],
-            "pressure": pressure_by_name[data["name"]],
+            "pressure": pressure_by_name.get(data["name"], "general policy behavior"),
         }
     )
 
@@ -256,27 +264,36 @@ if len(selected["requests"]) > len(request_preview):
     print(f"Showing {len(request_preview)} of {len(selected['requests'])} requests.")
 
 # %% [markdown]
-# ## 3. Connect the model to `main.cpp`
+# ## 3. Connect the model to the code
 #
-# The baseline is a state machine plus three FIFO structures:
+# We keep two distinct artifacts:
+#
+# - `scheduler_versions/v0_baseline.cpp` is the frozen, deliberately simple reference;
+# - `main.cpp` is the current layer-7 submission and is identical to
+#   `scheduler_versions/layered_scheduler.cpp` with its default `OPT_LEVEL=7`.
+#
+# The frozen baseline is a state machine plus three FIFO structures:
 #
 # - `pending_requests_`: arrived requests that do not yet have a cloud reservation;
 # - `edge_ready_`: legal edge tasks ordered by when they became ready; and
 # - `cloud_ready_[cloud]`: legal cloud tasks for each cloud.
 #
-# The baseline adds one deliberate restriction: it reserves an entire cloud for a request
+# It adds one deliberate restriction: it reserves an entire cloud for a request
 # from `P PRE` until `FIN`. The contest does not require that restriction. It makes the first
 # implementation easy to reason about, but it leaves clouds idle while their reserved request
 # is on the edge or waiting for a transfer.
 
 # %%
-main_source = (REPO_ROOT / "main.cpp").read_text()
+baseline_source = (REPO_ROOT / "scheduler_versions/v0_baseline.cpp").read_text()
+layered_source = (REPO_ROOT / "scheduler_versions/layered_scheduler.cpp").read_text()
 
 
-def source_between(start_marker: str, end_marker: str, max_lines: int = 180) -> str:
-    start = main_source.index(start_marker)
-    end = main_source.index(end_marker, start)
-    snippet = main_source[start:end].rstrip()
+def source_between(
+    source: str, start_marker: str, end_marker: str, max_lines: int = 180
+) -> str:
+    start = source.index(start_marker)
+    end = source.index(end_marker, start)
+    snippet = source[start:end].rstrip()
     lines = snippet.splitlines()
     if len(lines) > max_lines:
         lines = lines[:max_lines] + ["// ... bounded notebook preview ..."]
@@ -284,13 +301,20 @@ def source_between(start_marker: str, end_marker: str, max_lines: int = 180) -> 
 
 
 display(Markdown("### Request states"))
-display(Code(source_between("enum class RequestState", "enum class TaskKind"), language="cpp"))
+display(
+    Code(
+        source_between(baseline_source, "enum class RequestState", "enum class TaskKind"),
+        language="cpp",
+    )
+)
 
 # %%
 display(Markdown("### Baseline admission and edge dispatch"))
 display(
     Code(
-        source_between("string dispatch_admission()", "string dispatch_cloud_task"),
+        source_between(
+            baseline_source, "string dispatch_admission()", "string dispatch_cloud_task"
+        ),
         language="cpp",
     )
 )
@@ -299,7 +323,9 @@ display(
 display(Markdown("### The central dispatch decision"))
 display(
     Code(
-        source_between("vector<string> dispatch_ready_work()", "void print_response"),
+        source_between(
+            baseline_source, "vector<string> dispatch_ready_work()", "void print_response"
+        ),
         language="cpp",
     )
 )
@@ -307,7 +333,7 @@ display(
 # %% [markdown]
 # ### What makes this a baseline?
 #
-# The current code intentionally does **none** of the following:
+# The frozen v0 code intentionally does **none** of the following:
 #
 # - multiple active requests on one cloud;
 # - load-aware cloud selection;
@@ -318,8 +344,9 @@ display(
 # - layer-chunked prefill; or
 # - indirect link-aware scheduling.
 #
-# That is useful experimentally: each later change should have one clear hypothesis and a
-# scenario where we expect its effect to be visible.
+# That is useful experimentally: every later layer has one primary mechanism and a scenario
+# designed to make that mechanism visible. The layered engine uses compile-time feature gates,
+# so `OPT_LEVEL=4` contains layers 1 through 4 but none of layers 5 through 7.
 
 # %% [markdown]
 # ## 4. Understand the task-time table
@@ -455,7 +482,7 @@ run_checked(
         "python3",
         "tools/local_judge.py",
         "--solver",
-        str(SOLVER),
+        str(BASELINE_SOLVER),
         "--scenarios",
         str(selected_path),
         "--json-out",
@@ -517,7 +544,7 @@ run_checked(
         "python3",
         "tools/local_judge.py",
         "--solver",
-        str(SOLVER),
+        str(BASELINE_SOLVER),
         "--scenarios",
         str(SCENARIO_DIR),
         "--json-out",
@@ -565,27 +592,63 @@ for scenario_name, expected in saved_baseline.items():
 display_table(comparison_rows)
 assert all(row["legal"] for row in suite_results)
 assert maximum_score_delta < 1e-6
-print("Reproducibility check passed: current results match baseline-v0.")
+print("Reproducibility check passed: frozen v0 results match baseline-v0.json.")
 
 # %% [markdown]
 # ## 7. Optimization ladder
 #
-# We will make one policy change at a time and preserve protocol correctness.
+# The current scheduler implements these changes cumulatively. Each registered version builds
+# the same layered engine with a different `OPT_LEVEL`, which keeps every comparison attributable
+# to one newly enabled policy layer.
 #
-# | Step | Change | Primary scenarios | Expected signal |
+# | Step | Implemented change | Primary scenarios | Expected signal |
 # |---:|---|---|---|
 # | 0 | FIFO singleton baseline | all | legal reference point |
 # | 1 | Allow multiple unfinished requests per cloud | `two_cloud_parallel`, `output_length_skew` | less cloud idle time, lower elapsed time |
 # | 2 | Assign new requests using current cloud load | `output_length_skew` | less reservation/load imbalance |
 # | 3 | Group decode-ready work immediately | `batch_friendly_burst` | higher throughput and score |
-# | 4 | Select group sizes from the task-time table | batch + interpolation cases | better service cost without illegal `-1` use |
-# | 5 | Add age/SLO-aware priority and bounded waiting | `latency_sensitive_stream` | retain throughput without damaging TDR/TPOT |
-# | 6 | Split long `P PROC` work into layer pieces | `prefill_preemption` | short/decode work interleaves sooner |
-# | 7 | Account for shared-link pressure indirectly | `link_bottleneck` | lower transfer-induced TDR/elapsed time |
+# | 4 | Select group sizes from the task-time table | `nonmonotonic_batch_table`, interpolation | avoid groups whose per-item service rate is worse |
+# | 5 | Add conservative SLO urgency and bounded waiting | `slo_priority_collision`, `latency_sensitive_stream` | protect aged requests without destroying throughput |
+# | 6 | Split long `P PROC` work into layer pieces | `single_cloud_prefill_interleave` | let ready decode work interleave between pieces |
+# | 7 | Add score- and link-aware ordering/group cost | `latency_weighted_slow_link` | improve TDR when latency dominates the score |
 #
-# For each step, write down the hypothesis before editing `main.cpp`, identify the invariant
-# that could break, and decide which metrics should move. A higher aggregate score without a
-# causal explanation is not enough.
+# The benchmark workbench measures both each version versus v0 and each layer versus the layer
+# immediately before it. That second comparison is the cleanest local evidence for the effect
+# of one feature gate.
+
+# %%
+registry = json.loads(REGISTRY_PATH.read_text())
+display_table(
+    [
+        {
+            "layer": version.get("layer", 0),
+            "version": version["name"],
+            "compile gate": ", ".join(version.get("compile_defines", [])) or "standalone",
+            "description": version["description"],
+        }
+        for version in registry["versions"]
+        if version["name"] != "working-tree"
+    ]
+)
+
+# %% [markdown]
+# ### Where the optimization decisions live
+#
+# These bounded excerpts are the decision points—not copies of the whole scheduler. Rerunning
+# the notebook always reads the checked-in C++.
+
+# %%
+optimization_excerpts = [
+    ("Load-aware cloud selection (layer 2)", "int choose_cloud()", "int best_group_size"),
+    ("Table-aware group size (layer 4)", "int best_group_size", "bool should_wait_for_group"),
+    ("Request urgency (layer 5)", "double request_urgency", "int edge_stage_rank"),
+    ("Bounded waiting (layer 5)", "bool should_wait_for_group", "bool should_defer_prefill_admission"),
+    ("Adaptive prefill chunks (layer 6)", "int choose_prefill_piece_end", "vector<Candidate> cloud_candidates"),
+    ("Latency-weighted prefill ordering (layer 7)", "int take_link_aware_prefill_request", "double cloud_load_score"),
+]
+for title, start_marker, end_marker in optimization_excerpts:
+    display(Markdown(f"#### {title}"))
+    display(Code(source_between(layered_source, start_marker, end_marker, max_lines=90), language="cpp"))
 
 # %% [markdown]
 # ### Optimization experiment worksheet
@@ -605,10 +668,10 @@ print("Reproducibility check passed: current results match baseline-v0.")
 # ```
 
 # %% [markdown]
-# ## 8. Compare additional solver executables
+# ## 8. Compare the current layer-7 scheduler with v0
 #
-# Build each policy as a separate executable when possible. Add its path below; the notebook
-# will run the exact same scenario suite and preserve its results under `build/`.
+# This compact comparison answers “did the accumulated policy help?” The companion benchmark
+# notebook performs the more diagnostic v0 → v1 → ... → v7 comparison.
 
 # %%
 def safe_label(label: str) -> str:
@@ -635,13 +698,10 @@ def run_policy_suite(label: str, executable: Path) -> list[dict[str, Any]]:
     return json.loads(result_path.read_text())
 
 
-# Example after creating another build target:
-# ADDITIONAL_POLICIES = {"multi-active-v1": REPO_ROOT / "build/multi-active-v1"}
-ADDITIONAL_POLICIES: dict[str, Path] = {}
-
-policy_results: dict[str, list[dict[str, Any]]] = {"baseline-v0": suite_results}
-for policy_name, policy_executable in ADDITIONAL_POLICIES.items():
-    policy_results[policy_name] = run_policy_suite(policy_name, policy_executable)
+policy_results: dict[str, list[dict[str, Any]]] = {
+    "baseline-v0": suite_results,
+    "current-v7": run_policy_suite("current-v7", WORKING_SOLVER),
+}
 
 print("Loaded policies:", ", ".join(policy_results))
 
@@ -671,29 +731,28 @@ def comparison_against_baseline(
     return rows
 
 
-if len(policy_results) == 1:
-    display(Markdown("_Add an executable to `ADDITIONAL_POLICIES` to populate the comparison._"))
-else:
-    for policy_name, results in policy_results.items():
-        if policy_name == "baseline-v0":
-            continue
-        display(Markdown(f"### {policy_name} vs baseline-v0"))
-        display_table(comparison_against_baseline(suite_results, results))
+for policy_name, results in policy_results.items():
+    if policy_name == "baseline-v0":
+        continue
+    display(Markdown(f"### {policy_name} vs baseline-v0"))
+    display_table(comparison_against_baseline(suite_results, results))
 
 # %% [markdown]
 # ## Checks
 #
 # These assertions verify the lab itself:
 #
-# - all ten scenarios were discovered;
-# - every baseline interaction was legal;
+# - every registered scenario was discovered;
+# - every baseline and current-policy interaction was legal;
 # - the official calibration case reproduces 45 ms elapsed and TDR 30 ms;
 # - the score formula reconstruction matched the judge; and
-# - current results matched the saved `baseline-v0` snapshot.
+# - frozen v0 results matched the saved `baseline-v0` snapshot.
 
 # %%
-assert len(scenario_paths) == 10
+assert len(scenario_paths) >= 14
 assert all(row["legal"] for row in suite_results)
+assert all(row["legal"] for row in policy_results["current-v7"])
+assert set(current_baseline) == set(saved_baseline)
 
 official = current_baseline["official_worked_example"]
 assert math.isclose(official["elapsed"], 45.0, abs_tol=1e-9)
@@ -706,16 +765,15 @@ print("All notebook checks passed.")
 # %% [markdown]
 # ## Next steps
 #
-# The first optimization should be **multiple active requests per cloud without grouping**.
-# That isolates cloud utilization from batching and keeps the experiment easy to explain:
+# Open `scheduler_benchmark_workbench.ipynb` next. Its incremental table tells us which exact
+# layer moved which exact scenario. Use that evidence to tune one feature gate at a time:
 #
-# 1. remove the one-request-until-`FIN` reservation rule;
-# 2. retain singleton decode groups and FIFO order;
-# 3. define a simple cloud load measure;
-# 4. rerun legality checks;
-# 5. compare `two_cloud_parallel` and `output_length_skew`; and
-# 6. record why each metric changed before adding decode grouping.
+# 1. inspect the target scenario and its score components;
+# 2. review any scenario-level regression, even when the suite mean rose;
+# 3. change one threshold or policy rule;
+# 4. rerun both legality validation and the full version workbench; and
+# 5. keep the change only when its tradeoff matches the supplied scoring weights.
 #
-# Once that step is stable, duplicate the experiment worksheet and move to immediate decode
-# grouping. The notebook is intentionally cumulative: every optimization should leave behind
-# its hypothesis, code link, results, and interpretation.
+# The local scenarios are deterministic mechanism tests, not a model of the official hidden
+# workload distribution. A local win is evidence that a mechanism works under those inputs;
+# it is not a guarantee of leaderboard improvement.

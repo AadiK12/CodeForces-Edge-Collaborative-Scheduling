@@ -158,11 +158,15 @@ version_rows = []
 for version in selected_versions:
     source_path = REPO_ROOT / version["source"]
     assert source_path.is_file(), f"Missing source: {source_path}"
-    source_hash = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    compile_defines = version.get("compile_defines", [])
+    hash_input = source_path.read_bytes() + json.dumps(compile_defines, sort_keys=True).encode()
+    source_hash = hashlib.sha256(hash_input).hexdigest()
     version_rows.append(
         {
             "version": version["name"],
+            "layer": version.get("layer", 0),
             "source": version["source"],
+            "defines": ", ".join(compile_defines) or "none",
             "frozen": version["frozen"],
             "sha256": source_hash[:12],
             "description": version["description"],
@@ -201,9 +205,9 @@ display_table(
 # %% [markdown]
 # ## 2. Build every selected version
 #
-# Every source is compiled independently with identical flags. The source hash in the registry
-# table makes it possible to tell whether two differently named versions are actually the same
-# code.
+# Every source is compiled independently with identical base flags. The displayed fingerprint
+# hashes both source bytes and compile definitions, so two feature levels remain distinguishable
+# even though they use the same C++ file.
 
 # %%
 CXX = os.environ.get("CXX", "g++")
@@ -217,7 +221,10 @@ for version in selected_versions:
     name = version["name"]
     source_path = REPO_ROOT / version["source"]
     executable = BIN_DIR / name
-    completed = run_command([CXX, *CXXFLAGS, str(source_path), "-o", str(executable)])
+    define_flags = [f"-D{define}" for define in version.get("compile_defines", [])]
+    completed = run_command(
+        [CXX, *CXXFLAGS, *define_flags, str(source_path), "-o", str(executable)]
+    )
     executables[name] = executable
     build_rows.append(
         {
@@ -489,7 +496,115 @@ display_table(
 )
 
 # %% [markdown]
-# ## 6. Focus on one scenario
+# ## 6. Isolate the effect of each layer
+#
+# Every `vN` binary contains layers `1...N`. Comparing it with `v(N-1)` therefore isolates
+# the newly enabled feature gate while keeping source, compiler flags, and scenarios fixed.
+# These are deterministic local workload results—not statistical estimates and not a claim
+# about the official hidden-test distribution.
+
+# %%
+frozen_layers = sorted(
+    (
+        version
+        for version in selected_versions
+        if version.get("frozen") and version["name"].startswith("v")
+    ),
+    key=lambda version: version.get("layer", 0),
+)
+adjacent_layer_pairs = [
+    (previous, current)
+    for previous, current in zip(frozen_layers, frozen_layers[1:])
+    if current.get("layer", 0) == previous.get("layer", 0) + 1
+]
+
+incremental_rows = []
+for previous_version, current_version in adjacent_layer_pairs:
+    previous_name = previous_version["name"]
+    current_name = current_version["name"]
+    previous_results = result_map(previous_name)
+    current_results = result_map(current_name)
+    deltas = {
+        scenario_name: (
+            current_results[scenario_name]["score"]
+            - previous_results[scenario_name]["score"]
+        )
+        for scenario_name in selected_scenario_names
+    }
+    best_scenario = max(deltas, key=deltas.get)
+    worst_scenario = min(deltas, key=deltas.get)
+    mean_previous = sum(
+        previous_results[name]["score"] for name in selected_scenario_names
+    ) / len(selected_scenario_names)
+    mean_current = sum(
+        current_results[name]["score"] for name in selected_scenario_names
+    ) / len(selected_scenario_names)
+    incremental_rows.append(
+        {
+            "transition": f"{previous_name} → {current_name}",
+            "new policy": current_version["description"],
+            "mean score": f"{mean_current:.3f}",
+            "incremental mean": f"{mean_current - mean_previous:+.3f}",
+            "wins / ties / losses": (
+                f"{sum(delta > 1e-9 for delta in deltas.values())} / "
+                f"{sum(abs(delta) <= 1e-9 for delta in deltas.values())} / "
+                f"{sum(delta < -1e-9 for delta in deltas.values())}"
+            ),
+            "largest gain": f"{best_scenario} ({deltas[best_scenario]:+.3f})",
+            "largest regression": f"{worst_scenario} ({deltas[worst_scenario]:+.3f})",
+        }
+    )
+
+if incremental_rows:
+    display_table(incremental_rows)
+else:
+    display(Markdown("_Select adjacent frozen layers to populate this table._"))
+
+# %% [markdown]
+# ### Did each mechanism move its isolation scenario?
+#
+# These scenarios were written to make one scheduling pressure conspicuous. A positive delta
+# supports the narrow statement that the newly enabled mechanism helped on that constructed
+# input. A zero or negative result is equally useful: it tells us the heuristic did not buy
+# anything under that pressure or traded away a more valuable metric.
+
+# %%
+layer_targets = {
+    "v1-multi-active": ["two_cloud_parallel"],
+    "v2-load-aware": ["output_length_skew"],
+    "v3-immediate-groups": ["batch_friendly_burst"],
+    "v4-table-groups": ["nonmonotonic_batch_table"],
+    "v5-slo-aware": ["slo_priority_collision"],
+    "v6-prefill-chunks": ["single_cloud_prefill_interleave"],
+    "v7-link-aware": ["latency_weighted_slow_link"],
+}
+
+target_rows = []
+for previous_version, current_version in adjacent_layer_pairs:
+    previous_name = previous_version["name"]
+    current_name = current_version["name"]
+    for scenario_name in layer_targets.get(current_name, []):
+        if scenario_name not in selected_scenario_names:
+            continue
+        old = result_map(previous_name)[scenario_name]
+        new = result_map(current_name)[scenario_name]
+        target_rows.append(
+            {
+                "layer": current_name,
+                "isolation scenario": scenario_name,
+                "score before": f"{old['score']:.3f}",
+                "score after": f"{new['score']:.3f}",
+                "score delta": f"{new['score'] - old['score']:+.3f}",
+                "throughput delta %": f"{100 * (new['throughput'] / old['throughput'] - 1):+.1f}%",
+                "TDR delta %": f"{100 * (new['tdr'] / old['tdr'] - 1):+.1f}%" if old["tdr"] else "n/a",
+                "TPOT delta %": f"{100 * (new['tpot'] / old['tpot'] - 1):+.1f}%" if old["tpot"] else "n/a",
+            }
+        )
+
+display_table(target_rows)
+
+# %% [markdown]
+# ## 7. Focus on one scenario
 #
 # Change `FOCUS_SCENARIO` in the parameter cell to inspect a different workload.
 
@@ -528,7 +643,7 @@ display(
 display_table(focus_rows)
 
 # %% [markdown]
-# ## 7. Regression alerts
+# ## 8. Regression alerts
 #
 # These alerts surface tradeoffs for review. They are not blanket rejection rules because a
 # throughput-oriented policy can rationally trade latency in one scenario for a larger score
@@ -568,7 +683,7 @@ else:
     display(Markdown("_No configured regression thresholds were crossed._"))
 
 # %% [markdown]
-# ## 8. Save or export this run
+# ## 9. Save or export this run
 #
 # Disposable per-version JSON is always written to `build/benchmark-runs/`. Set
 # `SAVE_DURABLE_RUN = True` only when the experiment is worth preserving in
@@ -582,6 +697,8 @@ combined_run = {
     "versions": version_rows,
     "results": results_by_version,
     "summary": summary_rows,
+    "incremental_layers": incremental_rows,
+    "isolation_scenarios": target_rows,
     "validation": {
         "all_legal": all(row["status"] == "PASS" for row in run_rows),
         "score_recomputed": True,
@@ -613,20 +730,15 @@ assert all(row["status"] == "PASS" for row in build_rows)
 assert all(row["status"] == "PASS" for row in run_rows)
 assert all(row["token counts"] == "verified" for row in validation_rows)
 assert latest_path.is_file()
+if VERSIONS_TO_RUN == "all" and SCENARIOS_TO_RUN == "all":
+    assert len(incremental_rows) == 7
+    assert len(target_rows) == 7
 print("Benchmark workbench checks passed.")
 
 # %% [markdown]
 # ## Next steps
 #
-# Freeze the current working policy before beginning another optimization:
-#
-# ```bash
-# python3 tools/register_scheduler.py \
-#   --name v1-multi-active \
-#   --description "Multiple active singleton requests per cloud"
-# ```
-#
-# Then edit `main.cpp`, rerun this notebook, and compare the new `working-tree` against every
-# frozen version. When the working policy becomes a meaningful checkpoint, register it under
-# the next version name. This produces a reproducible sequence instead of one continuously
-# overwritten executable.
+# Use the isolation table to choose the next experiment. Tune only one layer at a time, rerun
+# the complete workbench, and inspect both its target-scenario gain and its worst regression.
+# If a future policy becomes a meaningful checkpoint, preserve it with
+# `tools/register_scheduler.py` before continuing so the comparison remains reproducible.

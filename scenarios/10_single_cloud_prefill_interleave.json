@@ -1,0 +1,12 @@
+{
+  "name": "single_cloud_prefill_interleave",
+  "description": "An active decode stream shares one cloud with a later long prefill, isolating the benefit and overhead of P PROC layer chunking.",
+  "system": {"K": 1, "S": 1.0, "latency_in_ms": 1.0, "bandwidth_gbps": 10.0, "bytes_per_token": 4096, "num_layers": 64},
+  "scoring": {"SLO1": 500.0, "SLO2": 20.0, "tp_UB": 0.16, "tp_base": 0.01, "dist_base": 5.0, "w_tp": 0.4, "w_c": 0.6},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 16, "output_length": 30},
+    {"arrival": 20.0, "input_length": 2048, "output_length": 2},
+    {"arrival": 40.0, "input_length": 16, "output_length": 8}
+  ]
+}

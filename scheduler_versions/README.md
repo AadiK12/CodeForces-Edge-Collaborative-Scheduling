@@ -1,17 +1,22 @@
 # Scheduler versions
 
-This directory contains frozen, runnable scheduler sources used by the benchmark workbench.
-`registry.json` defines the display name, source path, description, and whether a version is
-frozen. `main.cpp` is separately registered as `working-tree` so it can be compared before it
-is archived.
+`registry.json` is the manifest consumed by the benchmark notebook.
 
-Before starting the next optimization, preserve the current `main.cpp` with:
+- `v0_baseline.cpp` is the frozen standalone FIFO singleton reference.
+- `layered_scheduler.cpp` contains cumulative compile-time gates `OPT_LEVEL=1...7`.
+- `main.cpp` at the repository root is the current layer-7 submission.
+- `working-tree` in the registry lets the current submission be compared with frozen entries.
+
+Registry `compile_defines` are part of a version's identity and source hash. The workbench
+compiles each entry independently with otherwise identical flags.
+
+To preserve a future standalone `main.cpp` checkpoint:
 
 ```bash
 python3 tools/register_scheduler.py \
-  --name v1-multi-active \
-  --description "Multiple active singleton requests per cloud"
+  --name v8-experiment-name \
+  --description "One-sentence policy description"
 ```
 
-The command refuses to overwrite an existing source or registry entry. After registration,
-the benchmark notebook automatically discovers and runs the new version.
+The command refuses to overwrite an existing source or registry entry. Feature-gated versions
+should instead be added to the manifest with the corresponding `OPT_LEVEL` definition.

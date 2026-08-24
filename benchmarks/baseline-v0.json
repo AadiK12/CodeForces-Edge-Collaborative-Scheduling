@@ -78,5 +78,37 @@
     "tdr": 42.2887772,
     "tpot": 8.908940533333334,
     "elapsed": 91.57694719999999
+  },
+  {
+    "scenario": "single_cloud_prefill_interleave",
+    "score": 652.4668937936722,
+    "throughput": 0.039235164148627086,
+    "tdr": 606.2230997333335,
+    "tpot": 8.90655359999999,
+    "elapsed": 1019.4936319999996
+  },
+  {
+    "scenario": "slo_priority_collision",
+    "score": 968.382184780032,
+    "throughput": 0.07249942825210894,
+    "tdr": 230.70354911999993,
+    "tpot": 7.300081920000002,
+    "elapsed": 413.79636672000004
+  },
+  {
+    "scenario": "latency_weighted_slow_link",
+    "score": 718.5247781906181,
+    "throughput": 0.0007705083642963547,
+    "tdr": 12169.4,
+    "tpot": 78.89999999999964,
+    "elapsed": 15574.133333333331
+  },
+  {
+    "scenario": "nonmonotonic_batch_table",
+    "score": 398.06976268380015,
+    "throughput": 0.1226041325694356,
+    "tdr": 236.82762144000023,
+    "tpot": 7.100040960000008,
+    "elapsed": 522.0052428800004
   }
 ]

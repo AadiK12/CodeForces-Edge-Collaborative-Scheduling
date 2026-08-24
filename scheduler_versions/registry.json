@@ -8,9 +8,66 @@
       "frozen": true
     },
     {
+      "name": "v1-multi-active",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=1"],
+      "layer": 1,
+      "description": "Multiple unfinished singleton requests per cloud with round-robin assignment.",
+      "frozen": true
+    },
+    {
+      "name": "v2-load-aware",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=2"],
+      "layer": 2,
+      "description": "Adds cloud assignment using busy time, known prefill work, ready decode work, and an active-request proxy.",
+      "frozen": true
+    },
+    {
+      "name": "v3-immediate-groups",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=3"],
+      "layer": 3,
+      "description": "Adds immediate grouping for ready D PRE, same-cloud D PROC, and D POST work.",
+      "frozen": true
+    },
+    {
+      "name": "v4-table-groups",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=4"],
+      "layer": 4,
+      "description": "Selects decode group size by interpolated task-table service rate instead of always taking every ready member.",
+      "frozen": true
+    },
+    {
+      "name": "v5-slo-aware",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=5"],
+      "layer": 5,
+      "description": "Adds conservative SLO urgency and tightly gated controlled waiting when future events are known.",
+      "frozen": true
+    },
+    {
+      "name": "v6-prefill-chunks",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=6"],
+      "layer": 6,
+      "description": "Adds adaptive gap-free P PROC layer chunks when longer prefills compete with other cloud work.",
+      "frozen": true
+    },
+    {
+      "name": "v7-link-aware",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=7"],
+      "layer": 7,
+      "description": "Adds transfer-aware group cost and latency-weighted shortest-prefill ordering while preserving FIFO on throughput-weighted links.",
+      "frozen": true
+    },
+    {
       "name": "working-tree",
       "source": "main.cpp",
-      "description": "Current editable scheduler implementation.",
+      "layer": 7,
+      "description": "Current editable scheduler implementation, presently matching the complete level-7 policy.",
       "frozen": false
     }
   ]

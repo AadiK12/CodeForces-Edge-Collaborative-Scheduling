@@ -1,0 +1,22 @@
+{
+  "name": "nonmonotonic_batch_table",
+  "description": "A burst with deliberately poor size-8 decode times; table-aware grouping should prefer efficient size-4 groups over grouping every ready request.",
+  "system": {"K": 1, "S": 1.0, "latency_in_ms": 0.1, "bandwidth_gbps": 100.0, "bytes_per_token": 256, "num_layers": 4},
+  "scoring": {"SLO1": 300.0, "SLO2": 80.0, "tp_UB": 0.35, "tp_base": 0.01, "dist_base": 5.0, "w_tp": 0.9, "w_c": 0.1},
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 0.30, "prefill_proc": 2.00, "prefill_post": 0.30, "decode_pre": 0.50, "decode_proc": 3.00, "decode_post": 0.40},
+    {"batch_size": 4, "prefill_pre": 0.35, "prefill_proc": 3.00, "prefill_post": 0.32, "decode_pre": 0.80, "decode_proc": 4.00, "decode_post": 0.60},
+    {"batch_size": 8, "prefill_pre": 0.40, "prefill_proc": 4.50, "prefill_post": 0.35, "decode_pre": 5.00, "decode_proc": 20.00, "decode_post": 4.00},
+    {"batch_size": 16, "prefill_pre": 0.50, "prefill_proc": 7.00, "prefill_post": 0.40, "decode_pre": 8.00, "decode_proc": 32.00, "decode_post": 6.00}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 8, "output_length": 8},
+    {"arrival": 0.0, "input_length": 8, "output_length": 8},
+    {"arrival": 0.0, "input_length": 8, "output_length": 8},
+    {"arrival": 0.0, "input_length": 8, "output_length": 8},
+    {"arrival": 0.0, "input_length": 8, "output_length": 8},
+    {"arrival": 0.0, "input_length": 8, "output_length": 8},
+    {"arrival": 0.0, "input_length": 8, "output_length": 8},
+    {"arrival": 0.0, "input_length": 8, "output_length": 8}
+  ]
+}

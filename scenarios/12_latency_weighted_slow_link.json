@@ -1,0 +1,15 @@
+{
+  "name": "latency_weighted_slow_link",
+  "description": "A slow-link burst with highly variable input sizes, a strict TDR target, and a relaxed token-gap target; shortest-prefill-first should reduce first-output readiness without pretending it is best for throughput-weighted links.",
+  "system": {"K": 2, "S": 1.0, "latency_in_ms": 20.0, "bandwidth_gbps": 0.05, "bytes_per_token": 100000, "num_layers": 8},
+  "scoring": {"SLO1": 6000.0, "SLO2": 1000.0, "tp_UB": 0.008, "tp_base": 0.0005, "dist_base": 5.0, "w_tp": 0.1, "w_c": 0.9},
+  "task_times_file": "task_profiles/balanced.json",
+  "requests": [
+    {"arrival": 0.0, "input_length": 256, "output_length": 2},
+    {"arrival": 0.0, "input_length": 8, "output_length": 2},
+    {"arrival": 0.0, "input_length": 128, "output_length": 2},
+    {"arrival": 0.0, "input_length": 8, "output_length": 2},
+    {"arrival": 0.0, "input_length": 64, "output_length": 2},
+    {"arrival": 0.0, "input_length": 16, "output_length": 2}
+  ]
+}
