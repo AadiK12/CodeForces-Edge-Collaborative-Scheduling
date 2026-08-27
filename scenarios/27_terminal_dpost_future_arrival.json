@@ -1,0 +1,226 @@
+{
+  "name": "terminal_dpost_future_arrival",
+  "description": "Regression fixture where an in-flight decode DOWN transfer must be included before enlarging the current terminal D POST group.",
+  "system": {
+    "K": 3,
+    "S": 1.510696766,
+    "latency_in_ms": 0.077772731,
+    "bandwidth_gbps": 74.62199191,
+    "bytes_per_token": 64,
+    "num_layers": 8
+  },
+  "scoring": {
+    "SLO1": 10000.0,
+    "SLO2": 7.003140916,
+    "tp_UB": 2.990616763582,
+    "tp_base": 0.166145375755,
+    "dist_base": 2.561051696,
+    "w_tp": 0.25,
+    "w_c": 0.75
+  },
+  "task_times": [
+    {
+      "batch_size": 1,
+      "prefill_pre": 0.221131095,
+      "prefill_proc": 0.42433647,
+      "prefill_post": 0.022653553,
+      "decode_pre": 0.114112554,
+      "decode_proc": 0.559977811,
+      "decode_post": 0.26670688
+    },
+    {
+      "batch_size": 2,
+      "prefill_pre": 0.280537378,
+      "prefill_proc": 0.698672227,
+      "prefill_post": 0.026453223,
+      "decode_pre": 0.133431884,
+      "decode_proc": 0.731199739,
+      "decode_post": 0.296346141
+    },
+    {
+      "batch_size": 4,
+      "prefill_pre": 0.375408864,
+      "prefill_proc": 1.209487331,
+      "prefill_post": 0.031669151,
+      "decode_pre": 0.163653797,
+      "decode_proc": 0.982965926,
+      "decode_post": 2.805980338
+    },
+    {
+      "batch_size": 8,
+      "prefill_pre": 0.526918068,
+      "prefill_proc": 2.160628633,
+      "prefill_post": 0.038829224,
+      "decode_pre": 0.21093101,
+      "decode_proc": 1.35316508,
+      "decode_post": 2.287921683
+    },
+    {
+      "batch_size": 16,
+      "prefill_pre": 0.768877377,
+      "prefill_proc": 3.931660403,
+      "prefill_post": 0.048658087,
+      "decode_pre": 0.284888434,
+      "decode_proc": 1.897509081,
+      "decode_post": 3.304363517
+    },
+    {
+      "batch_size": 32,
+      "prefill_pre": 1.15528497,
+      "prefill_proc": 7.22933397,
+      "prefill_post": 0.062150483,
+      "decode_pre": 0.400582657,
+      "decode_proc": 2.697917156,
+      "decode_post": 5.372150766
+    },
+    {
+      "batch_size": 64,
+      "prefill_pre": 1.772375623,
+      "prefill_proc": 13.369625259,
+      "prefill_post": 0.080671931,
+      "decode_pre": 0.581567239,
+      "decode_proc": 3.874844033,
+      "decode_post": 2.361908304
+    },
+    {
+      "batch_size": 256,
+      "prefill_pre": 4.331687737,
+      "prefill_proc": 46.091710982,
+      "prefill_post": 0.14099862,
+      "decode_pre": 1.307583469,
+      "decode_proc": 8.150042514,
+      "decode_post": 3.486563734
+    },
+    {
+      "batch_size": 4096,
+      "prefill_pre": 27.505953056,
+      "prefill_proc": 552.879763214,
+      "prefill_post": 0.468894296,
+      "decode_pre": 7.432014718,
+      "decode_proc": 37.378648373,
+      "decode_post": 32.320232155
+    }
+  ],
+  "requests": [
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 48
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 1
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 64,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 1
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 64,
+      "output_length": 32
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 12
+    }
+  ]
+}

@@ -1,0 +1,186 @@
+{
+  "name": "learned_grouping_recovery",
+  "description": "A frozen generated post-hostile workload where untuned counterfactual scoring regresses and the offline-fitted conservative ranker recovers the proven v15 behavior.",
+  "system": {
+    "K": 1,
+    "S": 1.009900264,
+    "latency_in_ms": 0.18524767,
+    "bandwidth_gbps": 3.675791124,
+    "bytes_per_token": 313,
+    "num_layers": 8
+  },
+  "scoring": {
+    "SLO1": 132.21122934,
+    "SLO2": 51.574436286,
+    "tp_UB": 0.134495804965,
+    "tp_base": 0.014943978329,
+    "dist_base": 1.543125431,
+    "w_tp": 0.25,
+    "w_c": 0.75
+  },
+  "task_times": [
+    {
+      "batch_size": 1,
+      "prefill_pre": 0.372612188,
+      "prefill_proc": 2.078539983,
+      "prefill_post": 0.698108113,
+      "decode_pre": 2.642845978,
+      "decode_proc": 12.801229669,
+      "decode_post": 0.889664122
+    },
+    {
+      "batch_size": 2,
+      "prefill_pre": 0.439447043,
+      "prefill_proc": 3.069468916,
+      "prefill_post": 0.846115949,
+      "decode_pre": 2.880084073,
+      "decode_proc": 19.139862187,
+      "decode_post": 0.969525841
+    },
+    {
+      "batch_size": 4,
+      "prefill_pre": 0.532922035,
+      "prefill_proc": 4.690288804,
+      "prefill_post": 1.063856122,
+      "decode_pre": 3.188308666,
+      "decode_proc": 30.307148882,
+      "decode_post": 1.073283821
+    },
+    {
+      "batch_size": 8,
+      "prefill_pre": 0.663655828,
+      "prefill_proc": 7.341394267,
+      "prefill_post": 1.384182291,
+      "decode_pre": 3.58876037,
+      "decode_proc": 49.981470076,
+      "decode_post": 16.355338772
+    },
+    {
+      "batch_size": 16,
+      "prefill_pre": 0.846499648,
+      "prefill_proc": 11.677693589,
+      "prefill_post": 1.855426768,
+      "decode_pre": 4.109035426,
+      "decode_proc": 84.643328868,
+      "decode_post": 18.726429044
+    },
+    {
+      "batch_size": 32,
+      "prefill_pre": 1.102224368,
+      "prefill_proc": 18.770392112,
+      "prefill_post": 2.548693129,
+      "decode_pre": 4.784987437,
+      "decode_proc": 145.709956935,
+      "decode_post": 1.610775536
+    },
+    {
+      "batch_size": 64,
+      "prefill_pre": 1.459880057,
+      "prefill_proc": 30.371614399,
+      "prefill_post": 3.568584653,
+      "decode_pre": 5.663198134,
+      "decode_proc": 253.296023971,
+      "decode_post": 1.90640856
+    },
+    {
+      "batch_size": 256,
+      "prefill_pre": 2.659696341,
+      "prefill_proc": 80.384843343,
+      "prefill_post": 7.276289023,
+      "decode_pre": 8.286584165,
+      "decode_proc": 776.772859708,
+      "decode_post": 2.789521859
+    },
+    {
+      "batch_size": 4096,
+      "prefill_pre": 9.597382027,
+      "prefill_proc": 572.164912803,
+      "prefill_post": 32.667521995,
+      "decode_pre": 20.189488992,
+      "decode_proc": 7444.775225986,
+      "decode_post": 6.796409685
+    }
+  ],
+  "requests": [
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 4,
+      "output_length": 64
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 4,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 4,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 32
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 64,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 48
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 64,
+      "output_length": 1
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 64,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 4,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 2
+    }
+  ]
+}

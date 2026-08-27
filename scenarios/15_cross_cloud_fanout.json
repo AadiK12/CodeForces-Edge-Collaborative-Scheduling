@@ -1,0 +1,22 @@
+{
+  "name": "cross_cloud_fanout",
+  "description": "Eight synchronized streams span two clouds while groups of four are compute-efficient; fanout-aware D PRE selection can avoid paying two UP latencies per group.",
+  "system": {"K": 2, "S": 2.0, "latency_in_ms": 18.0, "bandwidth_gbps": 100.0, "bytes_per_token": 256, "num_layers": 4},
+  "scoring": {"SLO1": 2000.0, "SLO2": 300.0, "tp_UB": 0.08, "tp_base": 0.002, "dist_base": 5.0, "w_tp": 1.0, "w_c": 0.0},
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 0.2, "prefill_proc": 0.8, "prefill_post": 0.2, "decode_pre": 1.0, "decode_proc": 4.0, "decode_post": 1.0},
+    {"batch_size": 4, "prefill_pre": 0.3, "prefill_proc": 1.0, "prefill_post": 0.3, "decode_pre": 1.5, "decode_proc": 7.0, "decode_post": 1.5},
+    {"batch_size": 8, "prefill_pre": 0.4, "prefill_proc": 1.2, "prefill_post": 0.4, "decode_pre": 18.0, "decode_proc": 30.0, "decode_post": 12.0},
+    {"batch_size": 4096, "prefill_pre": 5.0, "prefill_proc": 20.0, "prefill_post": 4.0, "decode_pre": 1000.0, "decode_proc": 1000.0, "decode_post": 1000.0}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 1, "output_length": 8},
+    {"arrival": 0.0, "input_length": 1, "output_length": 8},
+    {"arrival": 0.0, "input_length": 1, "output_length": 8},
+    {"arrival": 0.0, "input_length": 1, "output_length": 8},
+    {"arrival": 0.0, "input_length": 1, "output_length": 8},
+    {"arrival": 0.0, "input_length": 1, "output_length": 8},
+    {"arrival": 0.0, "input_length": 1, "output_length": 8},
+    {"arrival": 0.0, "input_length": 1, "output_length": 8}
+  ]
+}

@@ -1,0 +1,5 @@
+#define DYNAMIC_COHERENT_DPOST 1
+#define DYNAMIC_COHERENT_DISPERSION_RATIO 0.15
+#define DYNAMIC_COHERENT_MAX_GROUP 8
+#define LEARNED_POLICY 1
+#include "layered_scheduler.cpp"

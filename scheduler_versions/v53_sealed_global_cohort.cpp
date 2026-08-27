@@ -1,0 +1,4 @@
+#define DYNAMIC_COHERENT_DPOST 1
+#define DYNAMIC_COHERENT_DISPERSION_RATIO 0.15
+#define INITIAL_DECODE_BARRIER 0
+#include "layered_scheduler.cpp"

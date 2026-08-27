@@ -1,0 +1,17 @@
+{
+  "name": "exact_wait_horizon",
+  "description": "A ready decode stage sees another active stream but the next known completion is beyond its safe batching budget; exact event timing should avoid an overshooting wait.",
+  "system": {"K": 1, "S": 4.0, "latency_in_ms": 0.2, "bandwidth_gbps": 100.0, "bytes_per_token": 512, "num_layers": 64},
+  "scoring": {"SLO1": 500.0, "SLO2": 35.0, "tp_UB": 0.18, "tp_base": 0.01, "dist_base": 5.0, "w_tp": 0.98, "w_c": 0.02},
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 0.2, "prefill_proc": 2.0, "prefill_post": 0.2, "decode_pre": 0.3, "decode_proc": 2.0, "decode_post": 0.3},
+    {"batch_size": 2, "prefill_pre": 0.3, "prefill_proc": 2.5, "prefill_post": 0.3, "decode_pre": 0.4, "decode_proc": 2.8, "decode_post": 0.4},
+    {"batch_size": 64, "prefill_pre": 1.0, "prefill_proc": 160.0, "prefill_post": 0.8, "decode_pre": 5.0, "decode_proc": 20.0, "decode_post": 4.0},
+    {"batch_size": 4096, "prefill_pre": 5.0, "prefill_proc": 1000.0, "prefill_post": 3.0, "decode_pre": 80.0, "decode_proc": 300.0, "decode_post": 60.0}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 1, "output_length": 16},
+    {"arrival": 0.0, "input_length": 1, "output_length": 16},
+    {"arrival": 25.0, "input_length": 256, "output_length": 1}
+  ]
+}

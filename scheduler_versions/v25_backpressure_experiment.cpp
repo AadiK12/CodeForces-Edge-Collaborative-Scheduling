@@ -1,0 +1,7 @@
+#define OPT_LEVEL 20
+#define BACKPRESSURE_OLDER_PPROC 1
+#define COHERENT_DECODE_BATCH 0
+#define PPOST_COHORT_SEED 0
+#define DYNAMIC_COHERENT_DPOST 0
+#define INITIAL_DECODE_BARRIER 0
+#include "layered_scheduler.cpp"

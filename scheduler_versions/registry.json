@@ -64,10 +64,149 @@
       "frozen": true
     },
     {
+      "name": "v8-exact-timelines",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=8"],
+      "layer": 8,
+      "description": "Tracks exact virtual resource and FIFO-link finish times and bounds batching waits by the next known event.",
+      "frozen": true
+    },
+    {
+      "name": "v9-fanout-cohorts",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=9"],
+      "layer": 9,
+      "description": "Adds cloud-fanout-aware D PRE group formation and waits only for compatible decode cohort events.",
+      "frozen": true
+    },
+    {
+      "name": "v10-batch-placement",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=10"],
+      "layer": 10,
+      "description": "Adds conservative pack-versus-spread cloud placement using future same-cloud decode batching affinity.",
+      "frozen": true
+    },
+    {
+      "name": "v11-score-slack",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=11"],
+      "layer": 11,
+      "description": "Ranks predicted-overdue work by marginal milestone progress using TDR and next-token path slack.",
+      "frozen": true
+    },
+    {
+      "name": "v12-deadline-chunks",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=12"],
+      "layer": 12,
+      "description": "Sizes prefill chunks around the next compatible decode event or TPOT deadline instead of a fixed target alone.",
+      "frozen": true
+    },
+    {
+      "name": "v13-attained-service",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=13"],
+      "layer": 13,
+      "description": "Adds least-attained-service decode selection with aging and an online completed-output survival estimate.",
+      "frozen": true
+    },
+    {
+      "name": "v14-backpressure",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=14"],
+      "layer": 14,
+      "description": "Adds downstream UP/DOWN pressure penalties so congested stages favor draining work over injecting more transfers.",
+      "frozen": true
+    },
+    {
+      "name": "v15-one-token-lookahead",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=15"],
+      "layer": 15,
+      "description": "Adds bounded rolling one-token lookahead when a locally efficient group is hostile to the downstream decode path.",
+      "frozen": true
+    },
+    {
+      "name": "v16-counterfactual-groups",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=16"],
+      "layer": 16,
+      "description": "Enumerates bounded membership and size candidates for all decode stages, predicts their next-token path on virtual queues, and deviates from the v15 fallback only above a safety margin.",
+      "frozen": true
+    },
+    {
+      "name": "v17-learned-group-ranker",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=17"],
+      "layer": 17,
+      "description": "Uses offline-fitted linear action-value coefficients selected on deterministic generated training workloads with a separate holdout audit.",
+      "frozen": true
+    },
+    {
+      "name": "v18-nonlinear-group-ranker",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=18"],
+      "layer": 18,
+      "description": "Adds optional nonlinear feature interactions; the exported search selected zero interaction weights, so this layer records a rejected-complexity result rather than an unsupported promotion.",
+      "frozen": true
+    },
+    {
+      "name": "v19-terminal-dpost",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=19"],
+      "layer": 19,
+      "description": "Starts again from the promoted v15 lineage and only enlarges terminal D POST groups when bounded full-queue simulation predicts at least a two-percent clearance improvement without sacrificing the score surrogate.",
+      "frozen": true
+    },
+    {
+      "name": "v20-terminal-dproc",
+      "source": "scheduler_versions/layered_scheduler.cpp",
+      "compile_defines": ["OPT_LEVEL=20", "COHERENT_DECODE_BATCH=0", "PPOST_COHORT_SEED=0", "DYNAMIC_COHERENT_DPOST=0", "INITIAL_DECODE_BARRIER=0"],
+      "layer": 20,
+      "description": "Extends v19 with a one-cloud, throughput-dominant D PROC to FIFO DOWN to D POST clearance rollout and retains the v19 choice outside its fully modeled regime.",
+      "frozen": true
+    },
+    {
+      "name": "v84-exact-dpost-partition",
+      "source": "scheduler_versions/v84_exact_dpost_partition.cpp",
+      "layer": 20,
+      "description": "Experimental whole-ready-queue D POST partition dynamic program, guarded by the existing terminal score and clearance rollout; retained for its broad-corpus regression evidence rather than promoted.",
+      "frozen": true
+    },
+    {
+      "name": "v85-censored-completion-index",
+      "source": "scheduler_versions/v85_censored_completion_index.cpp",
+      "layer": 20,
+      "description": "Experimental right-censored token-age hazard and Gittins-style completion index with a 64-exposure gate; retained after neutral validation and mixed training evidence.",
+      "frozen": true
+    },
+    {
+      "name": "v86-objective-margin-rollout",
+      "source": "scheduler_versions/v86_objective_margin_rollout.cpp",
+      "layer": 20,
+      "description": "Rejected broad three-action resource-sequence rollout using public service tables and predicted SLO margins.",
+      "frozen": true
+    },
+    {
+      "name": "v87-guarded-margin-rollout",
+      "source": "scheduler_versions/v87_guarded_objective_margin_rollout.cpp",
+      "layer": 20,
+      "description": "Latency-dominant, overdue-only guard around v86; still retained as rejected because the frozen suite exposed four losses.",
+      "frozen": true
+    },
+    {
+      "name": "v88-robust-portfolio-policy",
+      "source": "scheduler_versions/v88_robust_portfolio_policy.cpp",
+      "layer": 20,
+      "description": "Rejected quantized 18-to-8-to-6 residual coherent-DPOST selector trained on lower-confidence targets grouped by identical public states across hidden-output worlds; its frozen 0.50-margin independent holdout produced 24 wins and one loss.",
+      "frozen": true
+    },
+    {
       "name": "working-tree",
       "source": "main.cpp",
-      "layer": 7,
-      "description": "Current editable scheduler implementation, presently matching the complete level-7 policy.",
+      "layer": 20,
+      "description": "Current v83 submission adds a quantized conservative neural coherent-DPOST selector to the v69 sparse initial-decode barrier and the earlier audited layer-20 guards.",
       "frozen": false
     }
   ]

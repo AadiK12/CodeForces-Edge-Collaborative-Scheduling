@@ -4,7 +4,8 @@
 # This notebook builds every registered scheduler version, runs each one against the same
 # policy-independent scenario suite, and compares legality and performance. It is the
 # experiment dashboard for the optimization sequence developed in the companion
-# `edge_cloud_scheduling_lab.ipynb` notebook.
+# `edge_cloud_scheduling_lab.ipynb` notebook. The registry also includes rejected v84–v88 research
+# revisions so their regressions remain visible beside the promoted policy.
 
 # %% [markdown]
 # ## Goal
@@ -368,6 +369,8 @@ else:
 # The summary treats every selected scenario equally. Relative throughput, latency, and elapsed
 # columns are geometric means of per-scenario ratios to the reference. This avoids pretending
 # that raw throughput values from different workloads share one denominator.
+# `scheduler CPU ms` is the child-process CPU consumed across the selected cases. It is a coarse
+# complexity guard; these short interactions are not a precision microbenchmark.
 
 # %%
 def result_map(version_name: str) -> dict[str, dict[str, Any]]:
@@ -415,6 +418,10 @@ for version in selected_versions:
         current[scenario]["elapsed"] / reference_map[scenario]["elapsed"]
         for scenario in selected_scenario_names
     ]
+    scheduler_cpu_ms = 1000.0 * sum(
+        current[scenario].get("scheduler_cpu_seconds", 0.0)
+        for scenario in selected_scenario_names
+    )
     summary_rows.append(
         {
             "version": name,
@@ -429,6 +436,7 @@ for version in selected_versions:
             "TDR geo %": format_geometric_change(tdr_ratios),
             "TPOT geo %": format_geometric_change(tpot_ratios),
             "elapsed geo %": format_geometric_change(elapsed_ratios),
+            "scheduler CPU ms": f"{scheduler_cpu_ms:.3f}",
         }
     )
 
@@ -498,8 +506,9 @@ display_table(
 # %% [markdown]
 # ## 6. Isolate the effect of each layer
 #
-# Every `vN` binary contains layers `1...N`. Comparing it with `v(N-1)` therefore isolates
-# the newly enabled feature gate while keeping source, compiler flags, and scenarios fixed.
+# Versions 1–18 contain layers `1...N`. Comparing them with `v(N-1)` isolates the newly enabled
+# feature gate while keeping source, compiler flags, and scenarios fixed. Version 19 deliberately
+# branches from v15, while version 20 extends that terminal branch from v19.
 # These are deterministic local workload results—not statistical estimates and not a claim
 # about the official hidden-test distribution.
 
@@ -508,15 +517,31 @@ frozen_layers = sorted(
     (
         version
         for version in selected_versions
-        if version.get("frozen") and version["name"].startswith("v")
+        if version.get("frozen")
+        and (match := re.match(r"^v(\d+)-", version["name"])) is not None
+        and int(match.group(1)) <= 20
     ),
     key=lambda version: version.get("layer", 0),
 )
-adjacent_layer_pairs = [
-    (previous, current)
-    for previous, current in zip(frozen_layers, frozen_layers[1:])
-    if current.get("layer", 0) == previous.get("layer", 0) + 1
-]
+frozen_by_name = {version["name"]: version for version in frozen_layers}
+lineage_predecessors = {"v19-terminal-dpost": "v15-one-token-lookahead"}
+adjacent_layer_pairs = []
+for current in frozen_layers:
+    current_layer = current.get("layer", 0)
+    if current_layer == 0:
+        continue
+    previous_name = lineage_predecessors.get(current["name"])
+    if previous_name is None:
+        previous_name = next(
+            (
+                candidate["name"]
+                for candidate in frozen_layers
+                if candidate.get("layer", 0) == current_layer - 1
+            ),
+            None,
+        )
+    if previous_name in frozen_by_name:
+        adjacent_layer_pairs.append((frozen_by_name[previous_name], current))
 
 incremental_rows = []
 for previous_version, current_version in adjacent_layer_pairs:
@@ -577,6 +602,19 @@ layer_targets = {
     "v5-slo-aware": ["slo_priority_collision"],
     "v6-prefill-chunks": ["single_cloud_prefill_interleave"],
     "v7-link-aware": ["latency_weighted_slow_link"],
+    "v8-exact-timelines": ["exact_wait_horizon"],
+    "v9-fanout-cohorts": ["cross_cloud_fanout"],
+    "v10-batch-placement": ["batch_aware_placement"],
+    "v11-score-slack": ["predicted_deadline_slack"],
+    "v12-deadline-chunks": ["chunk_deadline_collision"],
+    "v13-attained-service": ["attained_service_tail"],
+    "v14-backpressure": ["downstream_backpressure"],
+    "v15-one-token-lookahead": ["one_token_lookahead"],
+    "v16-counterfactual-groups": ["counterfactual_grouping"],
+    "v17-learned-group-ranker": ["learned_grouping_recovery"],
+    "v18-nonlinear-group-ranker": ["nonlinear_ranker_holdout"],
+    "v19-terminal-dpost": ["terminal_dpost_remainder"],
+    "v20-terminal-dproc": ["terminal_dproc_clearance"],
 }
 
 target_rows = []
@@ -631,6 +669,7 @@ for version in selected_versions:
             "TPOT ms": f"{result['tpot']:.3f}",
             "elapsed ms": f"{result['elapsed']:.3f}",
             "frames": result["frames"],
+            "scheduler CPU ms": f"{1000 * result.get('scheduler_cpu_seconds', 0.0):.3f}",
         }
     )
 
@@ -731,8 +770,8 @@ assert all(row["status"] == "PASS" for row in run_rows)
 assert all(row["token counts"] == "verified" for row in validation_rows)
 assert latest_path.is_file()
 if VERSIONS_TO_RUN == "all" and SCENARIOS_TO_RUN == "all":
-    assert len(incremental_rows) == 7
-    assert len(target_rows) == 7
+    assert len(incremental_rows) == 20
+    assert len(target_rows) == 20
 print("Benchmark workbench checks passed.")
 
 # %% [markdown]

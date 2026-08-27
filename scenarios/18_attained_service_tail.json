@@ -1,0 +1,21 @@
+{
+  "name": "attained_service_tail",
+  "description": "One long-lived stream competes with later short streams under a group-size-two optimum, exposing least-attained-service and learned-remaining selection.",
+  "system": {"K": 1, "S": 3.0, "latency_in_ms": 0.2, "bandwidth_gbps": 100.0, "bytes_per_token": 128, "num_layers": 4},
+  "scoring": {"SLO1": 200.0, "SLO2": 22.0, "tp_UB": 0.25, "tp_base": 0.005, "dist_base": 5.0, "w_tp": 0.35, "w_c": 0.65},
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 0.3, "prefill_proc": 1.0, "prefill_post": 0.3, "decode_pre": 0.8, "decode_proc": 3.0, "decode_post": 0.8},
+    {"batch_size": 2, "prefill_pre": 0.4, "prefill_proc": 1.2, "prefill_post": 0.4, "decode_pre": 1.0, "decode_proc": 4.0, "decode_post": 1.0},
+    {"batch_size": 4, "prefill_pre": 0.5, "prefill_proc": 1.4, "prefill_post": 0.5, "decode_pre": 12.0, "decode_proc": 20.0, "decode_post": 12.0},
+    {"batch_size": 4096, "prefill_pre": 8.0, "prefill_proc": 30.0, "prefill_post": 6.0, "decode_pre": 100.0, "decode_proc": 100.0, "decode_post": 100.0}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 1, "output_length": 36},
+    {"arrival": 0.0, "input_length": 1, "output_length": 36},
+    {"arrival": 0.0, "input_length": 1, "output_length": 36},
+    {"arrival": 40.0, "input_length": 1, "output_length": 2},
+    {"arrival": 40.0, "input_length": 1, "output_length": 2},
+    {"arrival": 40.0, "input_length": 1, "output_length": 2},
+    {"arrival": 40.0, "input_length": 1, "output_length": 2}
+  ]
+}

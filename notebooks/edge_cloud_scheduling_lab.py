@@ -269,8 +269,8 @@ if len(selected["requests"]) > len(request_preview):
 # We keep two distinct artifacts:
 #
 # - `scheduler_versions/v0_baseline.cpp` is the frozen, deliberately simple reference;
-# - `main.cpp` is the current layer-7 submission and is identical to
-#   `scheduler_versions/layered_scheduler.cpp` with its default `OPT_LEVEL=7`.
+# - `main.cpp` is the current layer-20 engine with promoted v25/v27/v33/v41/v43/v53 revisions and is identical
+#   to `scheduler_versions/layered_scheduler.cpp` with its default `OPT_LEVEL=20`.
 #
 # The frozen baseline is a state machine plus three FIFO structures:
 #
@@ -346,7 +346,9 @@ display(
 #
 # That is useful experimentally: every later layer has one primary mechanism and a scenario
 # designed to make that mechanism visible. The layered engine uses compile-time feature gates,
-# so `OPT_LEVEL=4` contains layers 1 through 4 but none of layers 5 through 7.
+# so `OPT_LEVEL=4` contains layers 1 through 4 but none of the later gates. The rejected learned
+# layers remain reproducible, while the current submission follows the promoted v15 → v19 → v20
+# terminal-stage branch.
 
 # %% [markdown]
 # ## 4. Understand the task-time table
@@ -597,9 +599,9 @@ print("Reproducibility check passed: frozen v0 results match baseline-v0.json.")
 # %% [markdown]
 # ## 7. Optimization ladder
 #
-# The current scheduler implements these changes cumulatively. Each registered version builds
-# the same layered engine with a different `OPT_LEVEL`, which keeps every comparison attributable
-# to one newly enabled policy layer.
+# Versions 1–18 implement these changes cumulatively. Version 19 deliberately branches from v15,
+# isolating its terminal-stage experiment from rejected layers 16–18; version 20 extends that branch
+# backward through D PROC.
 #
 # | Step | Implemented change | Primary scenarios | Expected signal |
 # |---:|---|---|---|
@@ -611,10 +613,262 @@ print("Reproducibility check passed: frozen v0 results match baseline-v0.json.")
 # | 5 | Add conservative SLO urgency and bounded waiting | `slo_priority_collision`, `latency_sensitive_stream` | protect aged requests without destroying throughput |
 # | 6 | Split long `P PROC` work into layer pieces | `single_cloud_prefill_interleave` | let ready decode work interleave between pieces |
 # | 7 | Add score- and link-aware ordering/group cost | `latency_weighted_slow_link` | improve TDR when latency dominates the score |
+# | 8 | Track exact virtual resource/link finish times | `exact_wait_horizon` | avoid event waits that overshoot their budget |
+# | 9 | Price D PRE cloud fanout and compatible cohorts | `cross_cloud_fanout` | reduce fixed UP latencies per group |
+# | 10 | Add batching affinity to permanent cloud placement | `batch_aware_placement` | choose pack versus spread from the decode curve |
+# | 11 | Predict TDR and next-token slack | `predicted_deadline_slack` | advance the most valuable overdue milestone |
+# | 12 | Tie prefill pieces to decode events/deadlines | `chunk_deadline_collision` | reduce decode blocking without tiny pieces |
+# | 13 | Use attained service and completed-output history | `attained_service_tail` | give likely-short/young streams a bounded opportunity |
+# | 14 | Penalize injection into congested links | `downstream_backpressure` | drain downstream work under queue pressure |
+# | 15 | Look through a hostile downstream decode curve | `one_token_lookahead` | avoid locally fast but end-to-end slow groups |
+# | 16 | Score bounded counterfactual group candidates | `counterfactual_grouping` | compare complete next-token paths with a v15 fallback |
+# | 17 | Fit the group-value coefficients offline | `learned_grouping_recovery` | retain only train-selected coefficients and audit holdout |
+# | 18 | Test nonlinear group-feature interactions | `nonlinear_ranker_holdout` | accept the selected zero-interaction null result |
+# | 19 | Simulate finite D POST queue clearance with known arrivals | `terminal_dpost_remainder`, `terminal_dpost_future_arrival` | enlarge only when modeled clearance and score both improve |
+# | 20 | Roll D PROC through FIFO DOWN and finite D POST clearance | `terminal_dproc_clearance` | change only in the one-cloud regime the rollout fully models |
 #
-# The benchmark workbench measures both each version versus v0 and each layer versus the layer
-# immediately before it. That second comparison is the cleanest local evidence for the effect
-# of one feature gate.
+# The benchmark workbench measures both each version versus v0 and each layer versus its recorded
+# predecessor. That comparison is the cleanest local evidence for the effect of one feature gate.
+
+# %% [markdown]
+# ### How the layers fit together
+#
+# Layers 1–18 are cumulative rather than unrelated schedulers; layer 19 branches from v15 and layer
+# 20 extends that branch. At every event frame the scheduler follows the same correctness loop—
+# consume all events, update state, identify free resources, and emit only legal work.
+#
+# | Decision | Layers that affect it | Question being answered |
+# |---|---|---|
+# | Cloud admission | 1, 2, 7, 10 | Which cloud should own a request, and should admission be deferred? |
+# | Ready-task ordering | 5, 7, 8, 11, 14 | Which legal stage should use a free server next? |
+# | Decode group formation | 3, 4, 5, 7, 9, 13, 15, 16, 17, 18, 19, 20 | Which members and size should share the next decode task? |
+# | Prefill execution granularity | 6, 12 | Should one long `P PROC` run fully or expose deadline-aware interleaving points? |
+# | Short-horizon prediction | 8, 11, 14, 15, 16, 19, 20 | What known resource, FIFO-link, and downstream costs follow this action? |
+# | Offline policy calibration | 17, 18 | Which observable-feature weights survive train/holdout validation? |
+#
+# None of these layers predicts the hidden output length. They use only information already
+# revealed by the protocol: arrival time, input length, cloud association, request state,
+# ready queues, resource busy state, the supplied task-time table, scoring weights/SLOs, and
+# known in-flight work.
+
+# %% [markdown]
+# ### Layer 0 — frozen FIFO singleton baseline
+#
+# **Limitation we start with.** The baseline reserves a cloud from one request's `P PRE` until
+# that request's final `FIN`. It also sends every decode stage as a singleton group and runs the
+# whole prefill-processing range `[0, num_layers)` in one task. This is intentionally stricter
+# than the problem.
+#
+# **Intuition.** It is an excellent correctness reference because ownership is simple: one
+# request, one cloud, one lifecycle. But a reserved cloud can sit idle while its request is on
+# the edge or a shared transfer link. The remaining layers remove those artificial idle periods
+# while preserving the real rule that a server executes at most one task at a time.
+#
+# **Why keep it forever?** Without a frozen v0, we could see that today's scheduler is “fast”
+# but could not reproduce what changed. Exact transcript tests remain attached to this version;
+# optimized schedules are checked for legality rather than identical command order.
+
+# %% [markdown]
+# ### Layer 1 — multiple active requests per cloud
+#
+# **Baseline bottleneck.** “One task running on a cloud” and “one unfinished request assigned to
+# a cloud” are different constraints. Only the first is real. The baseline incorrectly couples
+# them, so cloud compute goes idle whenever its one request moves through edge or transfer work.
+#
+# **Policy.** A cloud may own many unfinished requests, each with its own state, while its compute
+# resource remains protected by one `cloud_busy` flag. New requests are assigned round-robin.
+# Cloud-ready `P PROC` and `D PROC` stages wait in per-cloud queues; the cloud still dispatches
+# only one assignment in a frame.
+#
+# **Why it helps.** This creates a pipeline. While request A is uploading or doing edge work,
+# the same cloud can process request B. We increase the chance that every free cloud has legal
+# work ready, which usually raises throughput and lowers total elapsed time.
+#
+# **Correctness invariants.** A request keeps the cloud chosen by `P PRE`; every `D PROC` group
+# remains single-cloud; and a busy cloud never receives a second concurrent task.
+#
+# **Tradeoff.** Round-robin balances request counts, not work. Because output lengths are hidden,
+# one cloud can accumulate long-lived decode streams while another receives short requests.
+# Queueing can also worsen an individual request's TPOT even when total throughput improves.
+
+# %% [markdown]
+# ### Layer 2 — observable-load-aware cloud placement
+#
+# **Layer-1 bottleneck.** Two clouds with three requests each need not have equal work. Input
+# lengths are visible, ready queues differ, and one cloud may already be busy. Pure round-robin
+# ignores all of that.
+#
+# **Policy.** Before `P PRE`, estimate each cloud's outstanding work and choose the minimum:
+#
+# $$
+# \text{load}(c) = \text{remaining busy time}
+# + \text{known prefill work}
+# + \text{ready decode work}
+# + 0.35\,\text{active-request proxy}.
+# $$
+#
+# The proxy prices each unfinished request as a fraction of one singleton `D PROC` service cost.
+# It is deliberately modest because the true remaining output tokens are unknowable.
+#
+# **Why it helps.** The first three terms route visible work away from a cloud that cannot serve
+# it soon. The active-request term prevents a cloud with little currently-ready work—but many
+# requests temporarily on the edge or links—from looking falsely empty.
+#
+# **Tradeoff.** This is an estimate, not clairvoyance. A request with one hidden token and a
+# request with one thousand hidden tokens look the same before `FIN` evidence arrives. The
+# coefficient can therefore under- or over-price future decode load, and placement is permanent
+# because requests cannot migrate clouds later.
+
+# %% [markdown]
+# ### Layer 3 — immediately group compatible decode work
+#
+# **Singleton bottleneck.** Every task pays scheduling overhead `S`. If eight ready requests run
+# as eight singleton `D PROC` tasks, the cloud pays `S` eight times. A group pays it once and may
+# also receive a sublinear task duration from the supplied table.
+#
+# **Policy.** When a decode resource becomes free, group all compatible requests that are ready
+# *right now*:
+#
+# - `D PRE` and `D POST` may combine requests from different clouds because they run on edge `E`;
+# - `D PROC` combines only requests assigned to that particular cloud;
+# - the group lasts for one stage of one decode iteration—membership is recalculated later.
+#
+# **Why it helps.** Grouping amortizes `S` and converts many queue operations into one service
+# interval. In a synchronized burst this can produce a large throughput gain and much smaller
+# token gaps.
+#
+# **Why “immediate” matters.** This layer does not wait for a hypothetical future member. It
+# captures batching efficiency without yet risking deliberate idle time.
+#
+# **Tradeoff.** “All ready requests” is not automatically the best size. A large group can occupy
+# the edge/cloud longer, delay urgent work, and perform poorly if the task-time table becomes
+# inefficient at larger batch sizes. That motivates layer 4.
+
+# %% [markdown]
+# ### Layer 4 — task-table-aware group size
+#
+# **Layer-3 bottleneck.** The largest ready group minimizes the number of assignments, but the
+# supplied duration curve can be nonmonotonic. If `T(8)` is much more than twice `T(4)`, two
+# groups of four can beat one group of eight despite paying `S` twice.
+#
+# **Policy.** For each decode stage independently, choose the currently available size `b` that
+# maximizes local service rate:
+#
+# $$
+# \text{rate}(b) = \frac{b}{S + T_{\text{stage}}(b)}.
+# $$
+#
+# Candidates include size 1, all currently ready members, and task-table breakpoints plus their
+# immediate neighbors. Missing `-1` entries are ignored and usable values are interpolated.
+# Smaller groups win exact rate ties, limiting unnecessary convoy size.
+#
+# **Why it helps.** The choice comes from the machine's supplied performance curve rather than
+# an assumption that batching always scales. The `nonmonotonic_batch_table` case intentionally
+# makes size 8 bad so this layer can demonstrate choosing efficient groups of 4.
+#
+# **Tradeoff.** This optimizes one stage's local members-per-millisecond, not the complete request
+# network. It does not know future arrivals and may leave a remainder group. Queueing, link
+# contention, and request SLOs can make the globally best decision differ from the local rate.
+
+# %% [markdown]
+# ### Layer 5 — SLO-aware urgency and tightly bounded waiting
+#
+# This layer addresses two opposite mistakes: always following FIFO when a request is already
+# late, and always dispatching immediately when a nearly complete efficient group is about to
+# become ready.
+#
+# **Urgency policy.** Normalize observed age by the relevant target:
+#
+# $$
+# u_{\text{prefill}} = \frac{\text{now} - \text{arrival}}{\text{SLO1}},\qquad
+# u_{\text{decode}} = \frac{\text{now} - \text{decode-clock start}}{\text{SLO2}}.
+# $$
+#
+# Under strongly latency-weighted scoring (`w_c > 0.8`), tasks with `u >= 1` may move ahead of
+# ordinary FIFO work. Otherwise ready sequence remains the primary order. This conservative gate
+# avoids turning every small age difference into priority churn.
+#
+# **Controlled-wait policy.** Waiting is considered only when throughput weight is at least
+# `0.95`, a known future event will wake the scheduler, the desired table-aware group is larger
+# than the current group, the oldest member has consumed less than half its TPOT budget, and the
+# elapsed wait is inside a small SLO2-derived budget. `D POST` is never held for batching because
+# it is already the final step that reveals progress or `FIN`.
+#
+# **Why it helps.** Urgency protects requests near/over an SLO boundary; bounded waiting can trade
+# a little idle time for enough additional members to amortize `S`. The supplied scoring weights
+# decide which behavior is even eligible.
+#
+# **Tradeoff.** The protocol provides event-driven wakeups, not self-set timers. The next event
+# can occur later than the nominal wait budget, so waiting must remain narrow. Priority also
+# changes who waits rather than eliminating work; improving TPOT for one request can delay another.
+
+# %% [markdown]
+# ### Layer 6 — adaptive, gap-free prefill chunks
+#
+# **Long-task bottleneck.** A legal full `P PROC 0 num_layers` can occupy one cloud for a long
+# interval. Tasks cannot be preempted after dispatch, so decode work becoming ready one moment
+# later must wait for the entire prefill.
+#
+# **Policy.** For models with more than eight layers, split `P PROC` into contiguous pieces only
+# when the same cloud has competing decode or prefill work. Piece size targets roughly:
+#
+# $$
+# \max\left(4S,\ \min(0.25\,\text{SLO1},\ 0.5\,\text{SLO2})\right)
+# $$
+#
+# milliseconds of processing, converted proportionally into a number of model layers. Every
+# piece starts exactly where the previous one ended; the final end is `num_layers`.
+#
+# **Why it helps.** Chunk boundaries are scheduling opportunities. After one piece completes,
+# the cloud can run ready `D PROC` work before resuming prefill, reducing head-of-line blocking
+# without violating the no-preemption rule.
+#
+# **Tradeoff.** Every piece pays `S`. Chunks that are too small destroy throughput; chunks that
+# are too large recreate the blocking problem. We therefore keep full prefills for small models
+# or when there is no competing work, and require a target of at least `4S`.
+
+# %% [markdown]
+# ### Layer 7 — score- and shared-link-aware scheduling
+#
+# **Compute-only bottleneck.** The clouds are separate compute resources, but all of them share
+# collective FIFO `UP` and `DOWN` links. A placement or group that looks efficient on compute can
+# inject a large transfer ahead of latency-sensitive traffic and dominate TDR/TPOT.
+#
+# **Policy components.** This layer is intentionally conditional:
+#
+# 1. **Transfer-aware group cost.** For `D PRE` and `D PROC`, group-size service cost also includes
+#    an estimated transfer time, so compute batching does not appear free on a slow link.
+# 2. **Latency-weighted prefill ordering.** When latency weight exceeds throughput weight, inspect
+#    a bounded FIFO window and prefer short prefill transfers. Request age subtracts from that
+#    cost, preventing large old requests from being ignored forever.
+# 3. **Downstream stage preference under link pressure.** On constrained links, edge ordering
+#    favors `D POST → P POST → D PRE → P PRE`, while clouds favor ready `D PROC` over new `P PROC`.
+#    This tends to finish already-invested work before admitting another large transfer.
+# 4. **Narrow admission pacing.** Under strongly latency-weighted scoring, a very young prefill
+#    may be deferred when the existing upload backlog already exceeds the TDR target and another
+#    known event will wake the scheduler.
+#
+# When throughput weight dominates, admission preserves FIFO; shortest-transfer-first is not a
+# universal rule.
+#
+# **Why it helps.** TDR-sensitive workloads benefit from completing small/advanced requests before
+# a huge upload monopolizes the FIFO link. Incorporating transfer cost also prevents selecting a
+# group solely because its compute curve looks fast.
+#
+# **Tradeoff.** Shortest-transfer-first can postpone large requests, and prioritizing first-token
+# readiness can make inter-token gaps worse. The `latency_weighted_slow_link` result demonstrates
+# exactly that trade: a large TDR improvement raises score under its weights even though TPOT
+# worsens. This is why the layer is gated by scoring emphasis rather than always enabled equally.
+
+# %% [markdown]
+# ### The overall intuition in one sentence
+#
+# Keep every resource doing useful legal work, amortize fixed overhead when compatible work is
+# ready, size batches from measured curves, create safe interleaving points around long tasks,
+# and spend latency only when the scoring weights say the throughput benefit is worth it.
+#
+# The policies are heuristics because future arrivals and output lengths are hidden. Their value
+# must be judged scenario by scenario, including regressions—not inferred from one aggregate mean.
 
 # %%
 registry = json.loads(REGISTRY_PATH.read_text())
@@ -639,12 +893,21 @@ display_table(
 
 # %%
 optimization_excerpts = [
-    ("Load-aware cloud selection (layer 2)", "int choose_cloud()", "int best_group_size"),
+    ("Load-aware cloud selection (layers 2/10)", "double cloud_load_score", "double observed_request_urgency"),
     ("Table-aware group size (layer 4)", "int best_group_size", "bool should_wait_for_group"),
     ("Request urgency (layer 5)", "double request_urgency", "int edge_stage_rank"),
     ("Bounded waiting (layer 5)", "bool should_wait_for_group", "bool should_defer_prefill_admission"),
     ("Adaptive prefill chunks (layer 6)", "int choose_prefill_piece_end", "vector<Candidate> cloud_candidates"),
     ("Latency-weighted prefill ordering (layer 7)", "int take_link_aware_prefill_request", "double cloud_load_score"),
+    ("Exact virtual timelines (layer 8)", "void enqueue_transfer", "void complete_transfer"),
+    ("Fanout-aware D PRE groups (layer 9)", "vector<int> choose_d_pre_members", "bool should_wait_for_group"),
+    ("Predicted path slack (layer 11)", "double estimated_prefill_path", "double action_service_time"),
+    ("Attained-service selection (layer 13)", "double expected_remaining_tokens", "double estimated_prefill_path"),
+    ("Backpressure and lookahead (layers 14/15)", "double downstream_pressure", "double decode_member_value"),
+    ("Counterfactual grouping (layer 16)", "vector<int> bounded_candidate_group_sizes", "vector<int> choose_d_pre_members"),
+    ("Learned group value (layers 17/18)", "double counterfactual_group_value", "vector<int> choose_counterfactual_decode_group"),
+    ("Finite D POST queue clearance (layer 19)", "vector<int> terminal_dpost_members", "bool should_wait_for_group"),
+    ("D PROC-to-D POST clearance (layer 20)", "vector<int> terminal_dproc_members", "vector<int> legacy_d_pre_members"),
 ]
 for title, start_marker, end_marker in optimization_excerpts:
     display(Markdown(f"#### {title}"))
@@ -668,10 +931,16 @@ for title, start_marker, end_marker in optimization_excerpts:
 # ```
 
 # %% [markdown]
-# ## 8. Compare the current layer-7 scheduler with v0
+# ## 8. Compare the current promoted v53 scheduler with v0
 #
 # This compact comparison answers “did the accumulated policy help?” The companion benchmark
-# notebook performs the more diagnostic v0 → v1 → ... → v7 comparison.
+# notebook performs the more diagnostic registered-lineage comparison through v20. Layers 16–18
+# remain rejected experiments; this section evaluates the layer-20 terminal branch plus the
+# promoted v25 resumed-prefill guard, v27 D POST threshold, v33 stage-correct cohort wait, and
+# v41's fresh-audited coherent decode cohort gate, v43's bounded P POST cohort seed, and v53's
+# sealed global coherent-DPOST gate. v53 groups the final D POST only when one D PRE group contains
+# every known unfinished request and public timing tables bound both transfer cost and predicted
+# member-ready dispersion. It never uses hidden output lengths.
 
 # %%
 def safe_label(label: str) -> str:
@@ -700,7 +969,7 @@ def run_policy_suite(label: str, executable: Path) -> list[dict[str, Any]]:
 
 policy_results: dict[str, list[dict[str, Any]]] = {
     "baseline-v0": suite_results,
-    "current-v7": run_policy_suite("current-v7", WORKING_SOLVER),
+    "current-v53": run_policy_suite("current-v53", WORKING_SOLVER),
 }
 
 print("Loaded policies:", ", ".join(policy_results))
@@ -749,10 +1018,10 @@ for policy_name, results in policy_results.items():
 # - frozen v0 results matched the saved `baseline-v0` snapshot.
 
 # %%
-assert len(scenario_paths) >= 14
+assert len(scenario_paths) >= 29
 assert all(row["legal"] for row in suite_results)
-assert all(row["legal"] for row in policy_results["current-v7"])
-assert set(current_baseline) == set(saved_baseline)
+assert all(row["legal"] for row in policy_results["current-v53"])
+assert set(saved_baseline).issubset(current_baseline)
 
 official = current_baseline["official_worked_example"]
 assert math.isclose(official["elapsed"], 45.0, abs_tol=1e-9)

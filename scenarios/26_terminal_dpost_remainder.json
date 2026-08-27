@@ -1,0 +1,266 @@
+{
+  "name": "terminal_dpost_remainder",
+  "description": "Finite D POST queue where the steady-state-rate batch leaves an expensive remainder and a larger first group clears the terminal queue faster.",
+  "system": {
+    "K": 4,
+    "S": 1.640165753,
+    "latency_in_ms": 0.132337822,
+    "bandwidth_gbps": 48.516673158,
+    "bytes_per_token": 128,
+    "num_layers": 8
+  },
+  "scoring": {
+    "SLO1": 10000.0,
+    "SLO2": 17.788246199,
+    "tp_UB": 0.477117761866,
+    "tp_base": 0.026506542326,
+    "dist_base": 1.062827427,
+    "w_tp": 0.75,
+    "w_c": 0.25
+  },
+  "task_times": [
+    {
+      "batch_size": 1,
+      "prefill_pre": 0.021167606,
+      "prefill_proc": 0.294150045,
+      "prefill_post": 0.056790931,
+      "decode_pre": 0.059671106,
+      "decode_proc": 0.947645256,
+      "decode_post": 3.872245095
+    },
+    {
+      "batch_size": 2,
+      "prefill_pre": 0.026702406,
+      "prefill_proc": 0.44965124,
+      "prefill_post": 0.074601573,
+      "decode_pre": 0.072448365,
+      "decode_proc": 1.267963091,
+      "decode_post": 4.302569505
+    },
+    {
+      "batch_size": 4,
+      "prefill_pre": 0.035453232,
+      "prefill_proc": 0.714759181,
+      "prefill_post": 0.104824952,
+      "decode_pre": 0.094345526,
+      "decode_proc": 1.754853345,
+      "decode_post": 17.429817171
+    },
+    {
+      "batch_size": 8,
+      "prefill_pre": 0.049288773,
+      "prefill_proc": 1.1667314,
+      "prefill_post": 0.156111858,
+      "decode_pre": 0.131872011,
+      "decode_proc": 2.494937389,
+      "decode_post": 27.956590637
+    },
+    {
+      "batch_size": 16,
+      "prefill_pre": 0.071163533,
+      "prefill_proc": 1.93728126,
+      "prefill_post": 0.243142057,
+      "decode_pre": 0.196183411,
+      "decode_proc": 3.619881644,
+      "decode_post": 28.541062344
+    },
+    {
+      "batch_size": 32,
+      "prefill_pre": 0.105748744,
+      "prefill_proc": 3.250961749,
+      "prefill_post": 0.390826057,
+      "decode_pre": 0.306397735,
+      "decode_proc": 5.329822001,
+      "decode_post": 66.550224138
+    },
+    {
+      "batch_size": 64,
+      "prefill_pre": 0.160429883,
+      "prefill_proc": 5.490604528,
+      "prefill_post": 0.641435204,
+      "decode_pre": 0.495278668,
+      "decode_proc": 7.928969482,
+      "decode_post": 40.145473612
+    },
+    {
+      "batch_size": 256,
+      "prefill_pre": 0.383572247,
+      "prefill_proc": 15.818521281,
+      "prefill_post": 1.788346368,
+      "decode_pre": 1.373713772,
+      "decode_proc": 17.884978195,
+      "decode_post": 163.562190066
+    },
+    {
+      "batch_size": 4096,
+      "prefill_pre": 2.335715349,
+      "prefill_proc": 133.087807374,
+      "prefill_post": 14.601021125,
+      "decode_pre": 11.530876885,
+      "decode_proc": 94.035793509,
+      "decode_post": 485.942396104
+    }
+  ],
+  "requests": [
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 64
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 64,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 4,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 64
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 32
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 64,
+      "output_length": 1
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 48
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 32
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 16
+    }
+  ]
+}

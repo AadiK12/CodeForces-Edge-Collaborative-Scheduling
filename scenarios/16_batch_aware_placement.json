@@ -1,0 +1,17 @@
+{
+  "name": "batch_aware_placement",
+  "description": "An extreme decode batching curve rewards assigning a new request to an equally loaded cloud that already has an active decode cohort.",
+  "system": {"K": 2, "S": 8.0, "latency_in_ms": 0.1, "bandwidth_gbps": 100.0, "bytes_per_token": 128, "num_layers": 4},
+  "scoring": {"SLO1": 1000.0, "SLO2": 200.0, "tp_UB": 0.25, "tp_base": 0.005, "dist_base": 5.0, "w_tp": 1.0, "w_c": 0.0},
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 0.2, "prefill_proc": 1.0, "prefill_post": 0.2, "decode_pre": 0.5, "decode_proc": 20.0, "decode_post": 0.5},
+    {"batch_size": 2, "prefill_pre": 0.3, "prefill_proc": 1.2, "prefill_post": 0.3, "decode_pre": 0.7, "decode_proc": 2.0, "decode_post": 0.7},
+    {"batch_size": 4, "prefill_pre": 0.4, "prefill_proc": 1.4, "prefill_post": 0.4, "decode_pre": 1.0, "decode_proc": 2.5, "decode_post": 1.0},
+    {"batch_size": 4096, "prefill_pre": 5.0, "prefill_proc": 20.0, "prefill_post": 4.0, "decode_pre": 100.0, "decode_proc": 100.0, "decode_post": 100.0}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 1, "output_length": 20},
+    {"arrival": 0.0, "input_length": 1, "output_length": 1},
+    {"arrival": 100.0, "input_length": 1, "output_length": 12}
+  ]
+}

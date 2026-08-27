@@ -1,0 +1,166 @@
+{
+  "name": "counterfactual_grouping",
+  "description": "A frozen generated workload where bounded end-to-end group evaluation beats the independent stage-rate choice; promoted from the training generator for layer-16 mechanism evidence.",
+  "system": {
+    "K": 1,
+    "S": 4.040833692,
+    "latency_in_ms": 1.248320753,
+    "bandwidth_gbps": 0.163572727,
+    "bytes_per_token": 18617,
+    "num_layers": 8
+  },
+  "scoring": {
+    "SLO1": 162.654900212,
+    "SLO2": 31.844140967,
+    "tp_UB": 0.790758203258,
+    "tp_base": 0.087862022584,
+    "dist_base": 1.506221711,
+    "w_tp": 0.25,
+    "w_c": 0.75
+  },
+  "task_times": [
+    {
+      "batch_size": 1,
+      "prefill_pre": 2.29940024,
+      "prefill_proc": 2.89096672,
+      "prefill_post": 0.178530475,
+      "decode_pre": 2.24602374,
+      "decode_proc": 1.02838946,
+      "decode_post": 0.439524944
+    },
+    {
+      "batch_size": 2,
+      "prefill_pre": 3.005327794,
+      "prefill_proc": 4.318350282,
+      "prefill_post": 0.244002189,
+      "decode_pre": 2.471398037,
+      "decode_proc": 1.388200576,
+      "decode_post": 0.483628497
+    },
+    {
+      "batch_size": 4,
+      "prefill_pre": 4.192862783,
+      "prefill_proc": 6.685407447,
+      "prefill_post": 0.362829816,
+      "decode_pre": 2.772155292,
+      "decode_proc": 1.94168875,
+      "decode_post": 0.542483759
+    },
+    {
+      "batch_size": 8,
+      "prefill_pre": 6.190573936,
+      "prefill_proc": 10.610743125,
+      "prefill_post": 0.578495545,
+      "decode_pre": 3.173509518,
+      "decode_proc": 2.793105354,
+      "decode_post": 0.621024867
+    },
+    {
+      "batch_size": 16,
+      "prefill_pre": 9.551190584,
+      "prefill_proc": 17.12020154,
+      "prefill_post": 0.969917199,
+      "decode_pre": 3.709108282,
+      "decode_proc": 4.102817591,
+      "decode_post": 0.725836322
+    },
+    {
+      "batch_size": 32,
+      "prefill_pre": 15.204532528,
+      "prefill_proc": 27.914959576,
+      "prefill_post": 1.68032637,
+      "decode_pre": 4.423853558,
+      "decode_proc": 6.117514198,
+      "decode_post": 0.865705003
+    },
+    {
+      "batch_size": 64,
+      "prefill_pre": 24.714773794,
+      "prefill_proc": 45.816111046,
+      "prefill_post": 2.969680665,
+      "decode_pre": 5.377666081,
+      "decode_proc": 9.216670106,
+      "decode_post": 1.052356813
+    },
+    {
+      "batch_size": 256,
+      "prefill_pre": 67.626343276,
+      "prefill_proc": 124.730483007,
+      "prefill_post": 9.55695959,
+      "decode_pre": 8.349090645,
+      "decode_proc": 21.317516219,
+      "decode_post": 1.633835625
+    },
+    {
+      "batch_size": 4096,
+      "prefill_pre": 532.714714535,
+      "prefill_proc": 938.546041157,
+      "prefill_post": 102.731756126,
+      "decode_pre": 23.064191317,
+      "decode_proc": 117.708076066,
+      "decode_post": 4.513437337
+    }
+  ],
+  "requests": [
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 64,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 32
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 32
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 32
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 64
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 12
+    }
+  ]
+}

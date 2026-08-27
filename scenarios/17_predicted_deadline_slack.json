@@ -1,0 +1,16 @@
+{
+  "name": "predicted_deadline_slack",
+  "description": "A nearly complete prefill will miss SLO1 if an earlier-sequenced admission runs first; predicted remaining-path slack should prioritize P POST.",
+  "system": {"K": 1, "S": 3.0, "latency_in_ms": 2.0, "bandwidth_gbps": 10.0, "bytes_per_token": 1024, "num_layers": 8},
+  "scoring": {"SLO1": 22.0, "SLO2": 30.0, "tp_UB": 0.12, "tp_base": 0.005, "dist_base": 4.0, "w_tp": 0.05, "w_c": 0.95},
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 1.0, "prefill_proc": 8.0, "prefill_post": 1.0, "decode_pre": 1.0, "decode_proc": 2.0, "decode_post": 1.0},
+    {"batch_size": 16, "prefill_pre": 1.5, "prefill_proc": 12.0, "prefill_post": 1.0, "decode_pre": 2.0, "decode_proc": 4.0, "decode_post": 2.0},
+    {"batch_size": 4096, "prefill_pre": 10.0, "prefill_proc": 100.0, "prefill_post": 1.0, "decode_pre": 100.0, "decode_proc": 100.0, "decode_post": 100.0}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 16, "output_length": 3},
+    {"arrival": 34.0, "input_length": 1, "output_length": 12},
+    {"arrival": 53.001638400000004, "input_length": 4096, "output_length": 1}
+  ]
+}

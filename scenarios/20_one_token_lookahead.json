@@ -1,0 +1,18 @@
+{
+  "name": "one_token_lookahead",
+  "description": "Local D PROC throughput favors four members, but the downstream D POST curve makes groups of two faster end to end; one-token lookahead should see the complete path.",
+  "system": {"K": 1, "S": 2.0, "latency_in_ms": 0.1, "bandwidth_gbps": 100.0, "bytes_per_token": 128, "num_layers": 4},
+  "scoring": {"SLO1": 300.0, "SLO2": 100.0, "tp_UB": 0.35, "tp_base": 0.005, "dist_base": 5.0, "w_tp": 1.0, "w_c": 0.0},
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 0.2, "prefill_proc": 1.0, "prefill_post": 0.2, "decode_pre": 0.5, "decode_proc": 4.0, "decode_post": 0.5},
+    {"batch_size": 2, "prefill_pre": 0.3, "prefill_proc": 1.2, "prefill_post": 0.3, "decode_pre": 0.7, "decode_proc": 5.0, "decode_post": 0.8},
+    {"batch_size": 4, "prefill_pre": 0.4, "prefill_proc": 1.4, "prefill_post": 0.4, "decode_pre": 0.9, "decode_proc": 6.0, "decode_post": 40.0},
+    {"batch_size": 4096, "prefill_pre": 8.0, "prefill_proc": 30.0, "prefill_post": 6.0, "decode_pre": 100.0, "decode_proc": 100.0, "decode_post": 1000.0}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 1, "output_length": 12},
+    {"arrival": 0.0, "input_length": 1, "output_length": 12},
+    {"arrival": 0.0, "input_length": 1, "output_length": 12},
+    {"arrival": 0.0, "input_length": 1, "output_length": 12}
+  ]
+}

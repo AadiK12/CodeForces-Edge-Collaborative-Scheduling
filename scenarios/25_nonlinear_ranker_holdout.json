@@ -1,0 +1,266 @@
+{
+  "name": "nonlinear_ranker_holdout",
+  "description": "A frozen formerly held-out post-hostile workload used to show that the selected nonlinear interaction layer is a no-op because training rejected every higher-complexity candidate.",
+  "system": {
+    "K": 3,
+    "S": 6.251420489,
+    "latency_in_ms": 0.620073378,
+    "bandwidth_gbps": 0.084221364,
+    "bytes_per_token": 1808,
+    "num_layers": 8
+  },
+  "scoring": {
+    "SLO1": 183.285203149,
+    "SLO2": 95.323163676,
+    "tp_UB": 0.457097931315,
+    "tp_base": 0.050788659035,
+    "dist_base": 2.895920626,
+    "w_tp": 0.95,
+    "w_c": 0.05
+  },
+  "task_times": [
+    {
+      "batch_size": 1,
+      "prefill_pre": 0.205131835,
+      "prefill_proc": 1.208724948,
+      "prefill_post": 0.340927385,
+      "decode_pre": 0.939364809,
+      "decode_proc": 1.791907231,
+      "decode_post": 4.174915609
+    },
+    {
+      "batch_size": 2,
+      "prefill_pre": 0.256295806,
+      "prefill_proc": 1.880966631,
+      "prefill_post": 0.42534604,
+      "decode_pre": 1.05172804,
+      "decode_proc": 2.176263569,
+      "decode_post": 4.674303074
+    },
+    {
+      "batch_size": 4,
+      "prefill_pre": 0.335818257,
+      "prefill_proc": 3.051704831,
+      "prefill_post": 0.556216483,
+      "decode_pre": 1.208892808,
+      "decode_proc": 2.687454935,
+      "decode_post": 5.372806611
+    },
+    {
+      "batch_size": 8,
+      "prefill_pre": 0.459417341,
+      "prefill_proc": 5.090596445,
+      "prefill_post": 0.759099045,
+      "decode_pre": 1.428722407,
+      "decode_proc": 3.367336046,
+      "decode_post": 6.349817901
+    },
+    {
+      "batch_size": 16,
+      "prefill_pre": 0.651523264,
+      "prefill_proc": 8.64141508,
+      "prefill_post": 1.073618759,
+      "decode_pre": 1.736202596,
+      "decode_proc": 4.271573391,
+      "decode_post": 67.279043306
+    },
+    {
+      "batch_size": 32,
+      "prefill_pre": 0.950107075,
+      "prefill_proc": 14.825320535,
+      "prefill_post": 1.561204527,
+      "decode_pre": 2.166281473,
+      "decode_proc": 5.474203032,
+      "decode_post": 83.944895245
+    },
+    {
+      "batch_size": 64,
+      "prefill_pre": 1.414185906,
+      "prefill_proc": 25.594861481,
+      "prefill_post": 2.317086818,
+      "decode_pre": 2.767841661,
+      "decode_proc": 7.07369244,
+      "decode_post": 12.3014033
+    },
+    {
+      "batch_size": 256,
+      "prefill_pre": 3.256584004,
+      "prefill_proc": 77.014225291,
+      "prefill_post": 5.305501989,
+      "decode_pre": 4.786160273,
+      "decode_proc": 12.030311142,
+      "decode_post": 21.271624241
+    },
+    {
+      "batch_size": 4096,
+      "prefill_pre": 18.459253708,
+      "prefill_proc": 705.971048914,
+      "prefill_post": 29.748038533,
+      "decode_pre": 16.460106931,
+      "decode_proc": 36.306970828,
+      "decode_post": 73.155345756
+    }
+  ],
+  "requests": [
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 4,
+      "output_length": 64
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 32
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 64
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 4,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 64
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 1
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 1,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 64
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 48
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 24
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 128,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 4,
+      "output_length": 4
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 2,
+      "output_length": 16
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 4,
+      "output_length": 12
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 32
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 64,
+      "output_length": 8
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 16,
+      "output_length": 1
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 8,
+      "output_length": 2
+    },
+    {
+      "arrival": 0.0,
+      "input_length": 32,
+      "output_length": 24
+    }
+  ]
+}

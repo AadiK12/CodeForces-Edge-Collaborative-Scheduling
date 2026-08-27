@@ -1,0 +1,19 @@
+{
+  "name": "downstream_backpressure",
+  "description": "A saturated UP queue coincides with both a new prefill admission and ready token completion; backpressure should drain D POST before injecting more work.",
+  "system": {"K": 2, "S": 2.0, "latency_in_ms": 12.0, "bandwidth_gbps": 0.02, "bytes_per_token": 200000, "num_layers": 8},
+  "scoring": {"SLO1": 2000.0, "SLO2": 180.0, "tp_UB": 0.02, "tp_base": 0.0001, "dist_base": 5.0, "w_tp": 0.65, "w_c": 0.35},
+  "task_times": [
+    {"batch_size": 1, "prefill_pre": 0.5, "prefill_proc": 2.0, "prefill_post": 0.5, "decode_pre": 0.5, "decode_proc": 2.0, "decode_post": 0.5},
+    {"batch_size": 4, "prefill_pre": 0.8, "prefill_proc": 3.0, "prefill_post": 0.8, "decode_pre": 0.8, "decode_proc": 4.0, "decode_post": 0.8},
+    {"batch_size": 4096, "prefill_pre": 12.0, "prefill_proc": 120.0, "prefill_post": 10.0, "decode_pre": 80.0, "decode_proc": 100.0, "decode_post": 80.0}
+  ],
+  "requests": [
+    {"arrival": 0.0, "input_length": 1, "output_length": 10},
+    {"arrival": 0.0, "input_length": 128, "output_length": 1},
+    {"arrival": 2.0, "input_length": 128, "output_length": 1},
+    {"arrival": 4.0, "input_length": 128, "output_length": 1},
+    {"arrival": 80.0, "input_length": 1, "output_length": 4},
+    {"arrival": 41295.045454545456, "input_length": 1, "output_length": 1}
+  ]
+}

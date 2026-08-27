@@ -15,6 +15,7 @@ import json
 import math
 import os
 import pathlib
+import resource
 import select
 import subprocess
 import sys
@@ -68,6 +69,8 @@ class SolverSession:
     def __init__(self, command: list[str], timeout_seconds: float):
         self.command = command
         self.timeout_seconds = timeout_seconds
+        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        self.start_cpu_seconds = usage.ru_utime + usage.ru_stime
         self.process = subprocess.Popen(
             command,
             stdin=subprocess.PIPE,
@@ -91,7 +94,7 @@ class SolverSession:
     def token(self) -> str:
         return self.reader.read_token(self.timeout_seconds)
 
-    def finish(self) -> tuple[int, str]:
+    def finish(self) -> tuple[int, str, float]:
         if self.process.stdin is not None:
             self.process.stdin.close()
             self.process.stdin = None
@@ -103,7 +106,9 @@ class SolverSession:
             raise JudgeError("solver did not exit after END")
         assert self.process.stderr is not None
         stderr = self.process.stderr.read().decode(errors="replace")
-        return return_code, stderr
+        usage = resource.getrusage(resource.RUSAGE_CHILDREN)
+        cpu_seconds = usage.ru_utime + usage.ru_stime - self.start_cpu_seconds
+        return return_code, stderr, cpu_seconds
 
     def abort(self) -> str:
         if self.process.poll() is None:
@@ -170,7 +175,13 @@ class Assignment:
 
 
 class ScenarioJudge:
-    def __init__(self, scenario_path: pathlib.Path, solver_command: list[str], timeout: float):
+    def __init__(
+        self,
+        scenario_path: pathlib.Path,
+        solver_command: list[str],
+        timeout: float,
+        trace_assignments: bool = False,
+    ):
         self.path = scenario_path
         self.data = json.loads(scenario_path.read_text())
         self.name = self.data.get("name", scenario_path.stem)
@@ -185,6 +196,8 @@ class ScenarioJudge:
             self.rows = profile_data["task_times"]
         self.solver_command = solver_command
         self.timeout = timeout
+        self.trace_assignments = trace_assignments
+        self.assignment_trace: list[dict[str, Any]] = []
 
         self.k = int(self.system["K"])
         self.schedule_cost = float(self.system["S"])
@@ -689,6 +702,24 @@ class ScenarioJudge:
         # depend on state changes caused by another assignment in that response.
         for assignment in assignments:
             self._apply_assignment(assignment)
+        if self.trace_assignments and assignments:
+            self.assignment_trace.append(
+                {
+                    "time": self.current_time,
+                    "assignments": [
+                        {
+                            "server": assignment.server,
+                            "family": assignment.family,
+                            "step": assignment.step,
+                            "remote": assignment.remote,
+                            "members": assignment.members,
+                            "layer_start": assignment.layer_start,
+                            "layer_end": assignment.layer_end,
+                        }
+                        for assignment in assignments
+                    ],
+                }
+            )
 
     def _all_finished(self) -> bool:
         return all(request.state == "FINISHED" for request in self.requests)
@@ -746,6 +777,7 @@ class ScenarioJudge:
         }
 
     def run(self) -> dict[str, Any]:
+        wall_start = time.perf_counter()
         solver = SolverSession(self.solver_command, self.timeout)
         try:
             solver.send(self._startup_text())
@@ -770,7 +802,7 @@ class ScenarioJudge:
 
                 if self._all_finished():
                     solver.send("END\n")
-                    return_code, stderr = solver.finish()
+                    return_code, stderr, scheduler_cpu_seconds = solver.finish()
                     if return_code != 0:
                         raise JudgeError(f"solver exited with code {return_code}: {stderr.strip()}")
                     result: dict[str, Any] = {
@@ -778,7 +810,11 @@ class ScenarioJudge:
                         "description": self.description,
                         "legal": True,
                         **self._score(),
+                        "scheduler_cpu_seconds": scheduler_cpu_seconds,
+                        "judge_wall_seconds": time.perf_counter() - wall_start,
                     }
+                    if self.trace_assignments:
+                        result["assignment_trace"] = self.assignment_trace
                     if stderr.strip():
                         result["solver_stderr"] = stderr.strip()
                     return result
@@ -825,6 +861,11 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--timeout", type=float, default=3.0, help="Seconds per solver response")
     parser.add_argument("--json-out", help="Optional path for the result array")
+    parser.add_argument(
+        "--trace-assignments",
+        action="store_true",
+        help="Include the solver's assignment trace in JSON output",
+    )
     return parser.parse_args()
 
 
@@ -843,7 +884,12 @@ def main() -> int:
 
     results: list[dict[str, Any]] = []
     for scenario_path in scenario_paths:
-        judge = ScenarioJudge(scenario_path, [str(solver_path)], args.timeout)
+        judge = ScenarioJudge(
+            scenario_path,
+            [str(solver_path)],
+            args.timeout,
+            trace_assignments=args.trace_assignments,
+        )
         result = judge.run()
         results.append(result)
         if result["legal"]:
